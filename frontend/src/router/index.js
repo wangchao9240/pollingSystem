@@ -30,11 +30,14 @@ const AppRouter = () => {
 const AuthHandler = () => {
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
-  console.log('navigate', navigate)
+
+
+  const currentPath = window.location.pathname
+  console.log("Current Path:", currentPath)
 
   useEffect(() => {
-    const isAuthenticated = !!user?.token/* your authentication logic here */
-    if (!isAuthenticated) {
+    const isAuthenticated = !!user?.token /* your authentication logic here */
+    if (!isAuthenticated && currentPath !== "/login" && currentPath !== "/register") {
       navigate("/login")
     }
   }, [navigate, user])

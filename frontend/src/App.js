@@ -1,16 +1,14 @@
-import AppRouter from './router/index';
-import { AlertProvider } from './components/Alert';
-import { Provider } from 'react-redux';
-import { store } from './store';
+import AppRouter from "./router/index"
+
+import { Provider } from "react-redux"
+import { store } from "./store"
 
 function App() {
   return (
     <Provider store={store}>
-      <AlertProvider>
-        <AppRouter />
-      </AlertProvider>
+      <AppRouter />
     </Provider>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser, setError, setLoading } from '../store/authSlice';
+import { setUser, setLoading } from '../store/authSlice';
 import axiosInstance from '../axiosConfig';
 import { Button, Input } from '@mui/material';
-import { useAlert } from '../components/Alert';
+import { useAlert } from '../context/AlertContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -22,15 +22,19 @@ const Login = () => {
 
     try {
       dispatch(setLoading(true));
-      const response = await axiosInstance.post('/api/auth/login', formData);
+      const { code, data, message } = await axiosInstance.post('/api/auth/login', formData);
+      console.log(code, data, message);
+      if (code !== 200) {
+        showAlert(message, 'info', 2000);
+        return;
+      }
       showAlert('Login successful.', 'success', 2000);
       setTimeout(() => {
-        dispatch(setUser(response.data));
+        dispatch(setUser(data));
         navigate('/surverList');
       }, 2000);
     } catch (error) {
-      dispatch(setError(error.message));
-      showAlert('Invalid email or password. Please try again.', 'info', 2000);
+      showAlert(`Server Error: ${error}`, 'info', 2000);
     } finally {
       dispatch(setLoading(false));
     }

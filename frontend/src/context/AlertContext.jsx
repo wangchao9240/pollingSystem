@@ -38,7 +38,7 @@ export const AlertProvider = ({ children }) => {
     duration: 3000,
   })
 
-  const showAlert = (message, type = "info", duration = 3000) => {
+  const showAlert = (message, type = "info", duration = 2000) => {
     setAlertState({
       open: true,
       type,

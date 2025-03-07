@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import { Button, Input } from '@mui/material';
-import { useAlert } from '../components/Alert';
+import { useAlert } from '../context/AlertContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -16,14 +16,18 @@ const Register = () => {
       return;
     }
     try {
-      await axiosInstance.post('/api/auth/register', formData);
+      const { code, data, message } = await axiosInstance.post('/api/auth/register', formData);
+      if (code !== 200) {
+        showAlert(message, 'info', 2000);
+        return;
+      }
       showAlert('Registration successful. Please log in.', 'success', 2000);
       setTimeout(() => {
         navigate('/login');
       }
       , 2000);
     } catch (error) {
-      showAlert('Registration failed. Please try again.', 'info', 2000);
+      showAlert(`Server Error: ${error}`, 'info', 2000);
     }
   };
 

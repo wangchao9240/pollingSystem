@@ -20,9 +20,6 @@ const authSlice = createSlice({
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
     logout: (state) => {
       utils.deleteCookie('user');
       state.user = null;
@@ -31,5 +28,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { setUser, setLoading, setError, logout } = authSlice.actions;
+export const { setUser, setLoading, logout } = authSlice.actions;
 export default authSlice.reducer;

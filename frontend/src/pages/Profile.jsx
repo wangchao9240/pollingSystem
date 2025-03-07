@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import { useAlert } from '../context/AlertContext';
 
 const Profile = () => {
+  const { showAlert } = useAlert();
   const { user } = useAuth(); // Access user token from context
   const [formData, setFormData] = useState({
     name: '',
@@ -17,17 +19,21 @@ const Profile = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get('/api/auth/profile', {
+        const { code, data, message } = await axiosInstance.get('/api/auth/profile', {
           headers: { Authorization: `Bearer ${user.token}` },
         });
+        if (code !== 200) {
+          showAlert(message, 'info', 2000);
+          return;
+        }
         setFormData({
-          name: response.data.name,
-          email: response.data.email,
-          university: response.data.university || '',
-          address: response.data.address || '',
+          name: data.name,
+          email: data.email,
+          university: data.university || '',
+          address: data.address || '',
         });
       } catch (error) {
-        alert('Failed to fetch profile. Please try again.');
+        showAlert(`Server Error: ${error}`, 'info', 2000);
       } finally {
         setLoading(false);
       }
@@ -40,12 +46,16 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axiosInstance.put('/api/auth/profile', formData, {
+      const { code, data, message } = await axiosInstance.put('/api/auth/profile', formData, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      alert('Profile updated successfully!');
+      if (code !== 200) {
+        showAlert(message, 'info', 2000);
+        return;
+      }
+      showAlert('Profile updated successfully!');
     } catch (error) {
-      alert('Failed to update profile. Please try again.');
+      showAlert(`Server Error: ${error}`, 'info', 2000);
     } finally {
       setLoading(false);
     }

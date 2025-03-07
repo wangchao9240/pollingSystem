@@ -1,0 +1,7 @@
+.layout-wrapper {
+  display: flex;
+  height: 100vh;
+  .menu-fixed {
+    min-width: initial;
+  }
+}

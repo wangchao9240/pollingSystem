@@ -11,6 +11,8 @@ import {
 } from "@mui/material"
 import { useState } from "react"
 
+import './SurveyList.css'
+
 const columns = [
   { id: "name", label: "Name", minWidth: 170 },
   { id: "code", label: "ISO\u00a0Code", minWidth: 100 },
@@ -45,12 +47,17 @@ const columns = [
         <Button variant="outlined" size="small" color="primary">
           Edit
         </Button>
-        <Button style={{ marginLeft: '8px' }} variant="outlined" size="small" color="primary">
+        <Button
+          style={{ marginLeft: "8px" }}
+          variant="outlined"
+          size="small"
+          color="primary"
+        >
           Delete
         </Button>
       </div>
     ),
-  }
+  },
 ]
 
 function createData(name, code, population, size) {
@@ -91,6 +98,9 @@ const SurveyList = () => {
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
+      <div className="button-wrapper">
+        <Button variant="contained">Add</Button>
+      </div>
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -114,13 +124,11 @@ const SurveyList = () => {
                   <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
                     {columns.map((column) => {
                       const value = row[column.id]
-                          return (
-                          <TableCell key={column.id} align={column.align}>
-                            {column.format
-                            ? column.format(value)
-                            : value}
-                          </TableCell>
-                          )
+                      return (
+                        <TableCell key={column.id} align={column.align}>
+                          {column.format ? column.format(value) : value}
+                        </TableCell>
+                      )
                     })}
                   </TableRow>
                 )

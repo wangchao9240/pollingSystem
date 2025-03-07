@@ -6,10 +6,14 @@ import Register from "../pages/Register"
 import Profile from "../pages/Profile"
 import SurverList from "../pages/SurveyList"
 import Layout from "../layout/layout"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
 
 const AppRouter = () => {
   return (
     <Router>
+      <AuthHandler />
       <Layout>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -20,6 +24,22 @@ const AppRouter = () => {
       </Layout>
     </Router>
   )
+}
+
+// authentication user info before entering the route
+const AuthHandler = () => {
+  const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
+  console.log('navigate', navigate)
+
+  useEffect(() => {
+    const isAuthenticated = !!user?.token/* your authentication logic here */
+    if (!isAuthenticated) {
+      navigate("/login")
+    }
+  }, [navigate, user])
+
+  return null
 }
 
 export default AppRouter

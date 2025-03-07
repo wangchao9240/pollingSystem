@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser, setError, setLoading } from '../store/authSlice';
 import axiosInstance from '../axiosConfig';
 import { Button, Input } from '@mui/material';
 import { useAlert } from '../components/Alert';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, user } = useSelector((state) => state.auth);
   const { showAlert } = useAlert();
 
   const handleSubmit = async (e) => {
@@ -17,15 +19,20 @@ const Login = () => {
       showAlert('Please fill all fields.', 'info', 2000);
       return;
     }
+
     try {
+      dispatch(setLoading(true));
       const response = await axiosInstance.post('/api/auth/login', formData);
       showAlert('Login successful.', 'success', 2000);
       setTimeout(() => {
-        login(response.data);
+        dispatch(setUser(response.data));
         navigate('/surverList');
       }, 2000);
     } catch (error) {
+      dispatch(setError(error.message));
       showAlert('Invalid email or password. Please try again.', 'info', 2000);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -47,7 +54,7 @@ const Login = () => {
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
         />
-        <Button type="submit" variant='contained' className="w-full bg-blue-600 text-white p-2 rounded">
+        <Button loading={loading} type="submit" variant='contained' className="w-full bg-blue-600 text-white p-2 rounded">
           Login
         </Button>
       </form>

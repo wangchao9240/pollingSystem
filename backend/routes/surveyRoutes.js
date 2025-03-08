@@ -1,12 +1,11 @@
-
 const express = require('express');
-// const { registerUser, loginUser, updateUserProfile, getProfile } = require('../controllers/authController');
+const { addOrUpdateSurvey, querySurver, deleteSurveyItemById } = require("../controllers/surveyController");
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateUserProfile);
+// Route to add or update a survey
+router.post("/addOrUpdateSurvey", protect, addOrUpdateSurvey);
+router.get("/surveyList", protect, querySurver);
+router.post("/deleteSurvey", protect, deleteSurveyItemById);
 
 module.exports = router;

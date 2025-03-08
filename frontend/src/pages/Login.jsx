@@ -10,7 +10,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { loading, user } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
   const { showAlert } = useAlert();
 
   const handleSubmit = async (e) => {
@@ -23,7 +23,6 @@ const Login = () => {
     try {
       dispatch(setLoading(true));
       const { code, data, message } = await axiosInstance.post('/api/auth/login', formData);
-      console.log(code, data, message);
       if (code !== 200) {
         showAlert(message, 'info', 2000);
         return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import {
   Dialog,
@@ -12,24 +12,67 @@ import {
   InputLabel,
   FormHelperText,
   IconButton,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material"
 import AddIcon from "@mui/icons-material/Add"
+import axiosInstance from "../../axiosConfig"
 import RemoveIcon from "@mui/icons-material/Remove"
+import { useAlert } from "../../context/AlertContext"
 
-const DialogModal = ({ open, handleClose, survey }) => {
-  const { control, handleSubmit, reset } = useForm()
+const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    setError,
+    clearErrors,
+  } = useForm()
   const { fields, append, remove } = useFieldArray({
     control,
     name: "options",
   })
+  const { showAlert } = useAlert()
 
-  useEffect(() => {
-    reset(survey)
-  }, [survey, reset, open])
+  const onSubmit = async (data) => {
+    const { correctAnswer, type } = data
+    if (type === "Single" && correctAnswer.length === 0) {
+      setError("correctAnswer", {
+        type: "manual",
+        message: "Correct Answer is required for Single type",
+      })
+      return
+    }
+    if (
+      type === "Multiple" &&
+      (correctAnswer.length === 0 || correctAnswer.length === 1)
+    ) {
+      setError("correctAnswer", {
+        type: "manual",
+        message:
+          "Correct Answer must contain more than one value for Multiple type",
+      })
+      return
+    }
+    clearErrors("correctAnswer")
+    try {
+      const {
+        code,
+        message,
+      } = await axiosInstance.post("/api/survey/addOrUpdateSurvey", data)
+      if (code !== 200) {
+        showAlert(message, "info", 2000)
+        return
+      }
+      showAlert("operate successfully.", "success", 2000)
+      handleClose()
+      querySurveyList()
 
-  const onSubmit = (data) => {
-    console.log(data)
-    // handleClose()
+    } catch (error) {
+      showAlert(`Server Error: ${error}`, "info", 2000)
+    }
   }
 
   const generateOptionKey = (length) => {
@@ -37,9 +80,34 @@ const DialogModal = ({ open, handleClose, survey }) => {
     return alphabet[length % 26]
   }
 
+  const options = watch("options", [])
+  const type = watch("type", "Single")
+  const correctAnswer = watch("correctAnswer", [])
+
+  const handleCheckboxChange = (optionKey) => {
+    if (type === "Single") {
+      setValue("correctAnswer", [optionKey])
+    } else {
+      const newCorrectAnswer = correctAnswer.includes(optionKey)
+        ? correctAnswer.filter((key) => key !== optionKey)
+        : [...correctAnswer, optionKey]
+      setValue("correctAnswer", newCorrectAnswer)
+    }
+  }
+
+  useEffect(() => {
+    reset(survey)
+  }, [survey, reset, open])
+
+  // fix bug
+  useEffect(() => {
+    if (options && options.length && !options[0].optionKey)
+      setValue("options", [])
+  }, [options, setValue])
+
   return (
     <Dialog fullWidth open={open} onClose={handleClose}>
-      <DialogTitle>Edit Survey</DialogTitle>
+      <DialogTitle>{ survey._id ? 'Edit' : 'Create' } Survey</DialogTitle>
       <DialogContent>
         <Controller
           name={"question"}
@@ -72,9 +140,18 @@ const DialogModal = ({ open, handleClose, survey }) => {
               <InputLabel variant="standard" htmlFor="uncontrolled-native">
                 Type
               </InputLabel>
-              <Select {...field} margin="dense" fullWidth error={!!error}>
+              <Select
+                {...field}
+                margin="dense"
+                fullWidth
+                error={!!error}
+                onChange={(e) => {
+                  setValue("correctAnswer", [])
+                  setValue("type", e.target.value)
+                }}
+              >
                 <MenuItem value={"Single"}>Single</MenuItem>
-                <MenuItem value={"Multi"}>Multi</MenuItem>
+                <MenuItem value={"Multiple"}>Multiple</MenuItem>
               </Select>
               <FormHelperText error={!!error}>
                 {error ? error.message : null}
@@ -125,11 +202,48 @@ const DialogModal = ({ open, handleClose, survey }) => {
           </div>
         ))}
         <Button
-          onClick={() => append({ optionKey: generateOptionKey(fields.length), optionValue: "" })}
+          onClick={() =>
+            append({
+              optionKey: generateOptionKey(fields.length),
+              optionValue: "",
+            })
+          }
           startIcon={<AddIcon />}
         >
           Add Option
         </Button>
+        {options && options.length ? (
+          <>
+            <InputLabel variant="standard" htmlFor="uncontrolled-native">
+              Correct Answer
+            </InputLabel>
+            {options.map((option, index) => (
+              <FormControlLabel
+                key={index}
+                control={
+                  <Checkbox
+                    checked={correctAnswer.includes(option.optionKey)}
+                    onChange={() => handleCheckboxChange(option.optionKey)}
+                  />
+                }
+                label={option.optionKey}
+              />
+            ))}
+            <FormHelperText
+              error={
+                correctAnswer.length === 0 ||
+                (type === "Multiple" &&
+                  (correctAnswer.length === 1 || correctAnswer.length === 0))
+              }
+            >
+              {correctAnswer.length === 0
+                ? "Correct Answer is required"
+                : type === "Multiple" && correctAnswer.length === 1
+                ? "Correct Answer must contain more than one value for Multiple type"
+                : null}
+            </FormHelperText>
+          </>
+        ) : null}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="primary">

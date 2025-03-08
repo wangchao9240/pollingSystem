@@ -40,13 +40,13 @@ const Profile = () => {
     };
 
     if (user) fetchProfile();
-  }, [user]);
+  }, [user, showAlert]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { code, data, message } = await axiosInstance.put('/api/auth/profile', formData, {
+      const { code, message } = await axiosInstance.put('/api/auth/profile', formData, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       if (code !== 200) {

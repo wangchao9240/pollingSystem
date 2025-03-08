@@ -33,14 +33,13 @@ const AuthHandler = () => {
 
 
   const currentPath = window.location.pathname
-  console.log("Current Path:", currentPath)
 
   useEffect(() => {
     const isAuthenticated = !!user?.token /* your authentication logic here */
     if (!isAuthenticated && currentPath !== "/login" && currentPath !== "/register") {
       navigate("/login")
     }
-  }, [navigate, user])
+  }, [navigate, user, currentPath])
 
   return null
 }

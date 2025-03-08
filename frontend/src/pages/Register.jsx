@@ -16,7 +16,7 @@ const Register = () => {
       return;
     }
     try {
-      const { code, data, message } = await axiosInstance.post('/api/auth/register', formData);
+      const { code, message } = await axiosInstance.post('/api/auth/register', formData);
       if (code !== 200) {
         showAlert(message, 'info', 2000);
         return;

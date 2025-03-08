@@ -2,7 +2,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
 } from "@mui/material"
 import "./Menu.css"
@@ -15,11 +14,6 @@ const Menu = () => (
           <ListItemText primary="Survey List" />
         </ListItemButton>
       </ListItem>
-      {/* <ListItem disablePadding>
-        <ListItemButton>
-          <ListItemText primary="Drafts" />
-        </ListItemButton>
-      </ListItem> */}
     </List>
   </div>
 )

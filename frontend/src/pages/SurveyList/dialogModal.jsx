@@ -12,8 +12,6 @@ import {
   InputLabel,
   FormHelperText,
   IconButton,
-  FormControlLabel,
-  Checkbox,
 } from "@mui/material"
 import AddIcon from "@mui/icons-material/Add"
 import axiosInstance from "../../axiosConfig"
@@ -27,8 +25,6 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
     reset,
     watch,
     setValue,
-    setError,
-    clearErrors,
   } = useForm()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -37,26 +33,34 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
   const { showAlert } = useAlert()
 
   const onSubmit = async (data) => {
-    const { correctAnswer, type } = data
-    if (type === "Single" && correctAnswer.length === 0) {
-      setError("correctAnswer", {
-        type: "manual",
-        message: "Correct Answer is required for Single type",
-      })
+    if (data.options.length === 0) {
+      // setError("options", {
+      //   type: "manual",
+      //   message: "Options are required",
+      // })
+      showAlert("Options are required", "info", 2000)
       return
     }
-    if (
-      type === "Multiple" &&
-      (correctAnswer.length === 0 || correctAnswer.length === 1)
-    ) {
-      setError("correctAnswer", {
-        type: "manual",
-        message:
-          "Correct Answer must contain more than one value for Multiple type",
-      })
-      return
-    }
-    clearErrors("correctAnswer")
+    // const { correctAnswer, type } = data
+    // if (type === "Single" && correctAnswer.length === 0) {
+    //   setError("correctAnswer", {
+    //     type: "manual",
+    //     message: "Correct Answer is required for Single type",
+    //   })
+    //   return
+    // }
+    // if (
+    //   type === "Multiple" &&
+    //   (correctAnswer.length === 0 || correctAnswer.length === 1)
+    // ) {
+    //   setError("correctAnswer", {
+    //     type: "manual",
+    //     message:
+    //       "Correct Answer must contain more than one value for Multiple type",
+    //   })
+    //   return
+    // }
+    // clearErrors("correctAnswer")
     try {
       const {
         code,
@@ -81,19 +85,18 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
   }
 
   const options = watch("options", [])
-  const type = watch("type", "Single")
-  const correctAnswer = watch("correctAnswer", [])
+  // const correctAnswer = watch("correctAnswer", [])
 
-  const handleCheckboxChange = (optionKey) => {
-    if (type === "Single") {
-      setValue("correctAnswer", [optionKey])
-    } else {
-      const newCorrectAnswer = correctAnswer.includes(optionKey)
-        ? correctAnswer.filter((key) => key !== optionKey)
-        : [...correctAnswer, optionKey]
-      setValue("correctAnswer", newCorrectAnswer)
-    }
-  }
+  // const handleCheckboxChange = (optionKey) => {
+  //   if (type === "Single") {
+  //     setValue("correctAnswer", [optionKey])
+  //   } else {
+  //     const newCorrectAnswer = correctAnswer.includes(optionKey)
+  //       ? correctAnswer.filter((key) => key !== optionKey)
+  //       : [...correctAnswer, optionKey]
+  //     setValue("correctAnswer", newCorrectAnswer)
+  //   }
+  // }
 
   useEffect(() => {
     reset(survey)
@@ -146,7 +149,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
                 fullWidth
                 error={!!error}
                 onChange={(e) => {
-                  setValue("correctAnswer", [])
+                  // setValue("correctAnswer", [])
                   setValue("type", e.target.value)
                 }}
               >
@@ -212,7 +215,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
         >
           Add Option
         </Button>
-        {options && options.length ? (
+        {/* {options && options.length ? (
           <>
             <InputLabel variant="standard" htmlFor="uncontrolled-native">
               Correct Answer
@@ -243,7 +246,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
                 : null}
             </FormHelperText>
           </>
-        ) : null}
+        ) : null} */}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="primary">

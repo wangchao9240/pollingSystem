@@ -4,7 +4,9 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import Login from "../pages/Login"
 import Register from "../pages/Register"
 import Profile from "../pages/Profile"
-import SurverList from "../pages/SurveyList"
+import SurveyList from "../pages/SurveyList"
+import Survey from "../pages/Survey"
+import Success from "../pages/Survey/success.jsx"
 import Layout from "../layout/layout"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
@@ -19,7 +21,9 @@ const AppRouter = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/surverList" element={<SurverList />} />
+          <Route path="/surveyList" element={<SurveyList />} />
+          <Route path="/survey" element={<Survey />} />
+          <Route path="/surveySuccess" element={<Success />} />
         </Routes>
       </Layout>
     </Router>
@@ -31,12 +35,17 @@ const AuthHandler = () => {
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
 
-
   const currentPath = window.location.pathname
 
   useEffect(() => {
     const isAuthenticated = !!user?.token /* your authentication logic here */
-    if (!isAuthenticated && currentPath !== "/login" && currentPath !== "/register") {
+    if (
+      !isAuthenticated &&
+      currentPath !== "/login" &&
+      currentPath !== "/register" &&
+      currentPath !== "/survey" &&
+      currentPath !== "/surveySuccess"
+    ) {
       navigate("/login")
     }
   }, [navigate, user, currentPath])

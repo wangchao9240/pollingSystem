@@ -23,7 +23,7 @@ const Navbar = (props) => {
           {props.menuStatus ? <MenuOpenIcon onClick={props.handleMenu} /> : <MenuIcon onClick={props.handleMenu} />}
         </div>
       ) }
-      <Link to="/" className={"text-2xl font-bold ml-" + (user?.token ? "10" : "0")}>
+      <Link to="/" className={"text-2xl font-bold"} style={{ marginLeft: user?.token ? '30px' : '0' }}>
         Online Polling System
       </Link>
       <div>

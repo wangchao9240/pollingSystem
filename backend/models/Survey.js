@@ -1,5 +1,4 @@
 const mongoose = require("mongoose")
-const { create } = require("./User")
 
 const surveySchema = new mongoose.Schema({
   question: { type: String, required: true },
@@ -10,7 +9,7 @@ const surveySchema = new mongoose.Schema({
       optionValue: { type: String, required: true },
     },
   ],
-  correctAnswer: [{ type: String, required: true }],
+  // correctAnswer: [{ type: String, required: true }],
   createdAt: { type: Date, default: Date.now },
   modifyAt: { type: Date, default: Date.now },
 })

@@ -18,6 +18,7 @@ import { useEffect, useState } from "react"
 import DialogModal from "./dialogModal"
 import axiosInstance from "../../axiosConfig"
 import { useAlert } from "../../context/AlertContext"
+import ResultDialog from "./resultDialog"
 
 import "./index.css"
 
@@ -37,6 +38,7 @@ const SurveyList = () => {
   const [surveyItem, setSurveyItem] = useState({})
   const { showAlert } = useAlert()
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [openResultDialog, setOpenResultDialog] = useState(false)
 
   const columns = [
     { id: "question", label: "Question", minWidth: 170 },
@@ -72,7 +74,7 @@ const SurveyList = () => {
     {
       id: "actions",
       label: "Actions",
-      width: 178,
+      width: 220,
       align: "right",
       format: (value, record) => (
         <div>
@@ -98,6 +100,31 @@ const SurveyList = () => {
             }}
           >
             Delete
+          </Button>
+          <Button
+            style={{ marginTop: "10px" }}
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/survey?id=${record._id}`)
+              showAlert("Link copied to clipboard", "success", 2000)
+              setSurveyItem(record)
+            }}
+            variant="outlined"
+            size="small"
+            color="primary"
+          >
+            Copy Link
+          </Button>
+          <Button
+            style={{ marginLeft: "8px", marginTop: "10px" }}
+            variant="outlined"
+            size="small"
+            color="primary"
+            onClick={() => {
+              setSurveyItem(record)
+              setOpenResultDialog(true)
+            }}
+          >
+            Result
           </Button>
         </div>
       ),
@@ -218,6 +245,11 @@ const SurveyList = () => {
         open={openDeleteDialog}
         handleClose={() => setOpenDeleteDialog(false)}
         handleDelete={() => handleDeleteSurvey()}
+      />
+      <ResultDialog
+        open={openResultDialog}
+        handleClose={() => setOpenResultDialog(false)}
+        survey={surveyItem}
       />
     </Paper>
   )

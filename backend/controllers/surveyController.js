@@ -1,6 +1,22 @@
 const Survey = require("../models/Survey")
+const SurveyResult = require("../models/SurveyResult")
 
-const querySurver = async (req, res) => {
+const querySurveyItemById = async (req, res) => {
+  try {
+    const { id } = req.params
+    console.log(id, 'id!!!!')
+    const survey = await Survey.findById(id)
+    if (!survey) {
+      return res.json({ code: 404, data: null, message: "Survey not found" })
+    } else {
+      res.json({ code: 200, data: survey, message: "Survey fetched successfully" })
+    }
+  } catch (error) {
+    res.json({ code: 500, data: null, message: error.message })
+  }
+}
+
+const querySurvey = async (req, res) => {
   try {
     const { page = 1, pageSize = 10 } = req.query
     const skip = (page - 1) * pageSize
@@ -43,8 +59,7 @@ const addOrUpdateSurvey = async (req, res) => {
       !question ||
       !type ||
       !options ||
-      !Array.isArray(options) ||
-      !Array.isArray(correctAnswer)
+      !Array.isArray(options)
     ) {
       return res.json({ code: 400, data: null, message: "Invalid survey data" })
     }
@@ -88,8 +103,52 @@ const addOrUpdateSurvey = async (req, res) => {
   }
 }
 
+const completeSurvey = async (req, res) => {
+  try {
+    const { id, chooseAnswer } = req.body
+    const surverResult = new SurveyResult({ questionId: id, chooseAnswer })
+    await surverResult.save()
+    res.json({ code: 200, data: surverResult, message: "Survey completed" })
+  } catch (error) {
+    res.json({ code: 500, data: null, message: error.message })
+  }
+}
+
+const querySurveyResultByQuestionId = async (req, res) => {
+  try {
+    const { id } = req.params
+    const survey = await Survey.findById(id)
+    if (!survey) {
+      return res.json({ code: 404, data: null, message: "Survey not found" })
+    }
+    const surveyResults = await SurveyResult.find({ questionId: id })
+    const resultCount = surveyResults.reduce((acc, result) => {
+      result.chooseAnswer.forEach(answer => {
+        acc[answer] = (acc[answer] || 0) + 1
+      })
+      return acc
+    }, {})
+
+    const formattedResults = Object.keys(resultCount).map(key => ({
+      name: key,
+      value: resultCount[key]
+    }))
+
+    res.json({
+      code: 200,
+      data: formattedResults,
+      message: "Survey results fetched successfully",
+    })
+  } catch (error) {
+    res.json({ code: 500, data: null, message: error.message })
+  }
+}
+
 module.exports = {
-  querySurver,
+  querySurveyItemById,
+  querySurvey,
   deleteSurveyItemById,
   addOrUpdateSurvey,
+  completeSurvey,
+  querySurveyResultByQuestionId
 }

@@ -35,6 +35,7 @@ const ResultDialog = ({ open, handleClose, survey }) => {
     if (open && survey._id) {
       fetchResuleByQuestionId(survey._id)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, survey])
 
   useEffect(() => {

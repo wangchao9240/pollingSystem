@@ -5,14 +5,17 @@ import {
   ListItemText,
 } from "@mui/material"
 import "./Menu.css"
+import { Link } from "react-router-dom";
 
 const Menu = () => (
   <div className="menu-wrapper">
     <List>
       <ListItem disablePadding>
-        <ListItemButton selected={true}>
-          <ListItemText primary="Survey List" />
-        </ListItemButton>
+        <Link to="/surveyList" style={{ width: '100%', textDecoration: "none" }}>
+          <ListItemButton>
+            <ListItemText primary="Survey List" />
+          </ListItemButton>
+        </Link>
       </ListItem>
     </List>
   </div>

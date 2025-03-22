@@ -2,6 +2,7 @@ import React from "react"
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 
 import Login from "../pages/Login"
+import WelcomePage from "../pages/WelCome.jsx"
 import Register from "../pages/Register"
 import Profile from "../pages/Profile"
 import SurveyList from "../pages/SurveyList"
@@ -18,7 +19,9 @@ const AppRouter = () => {
       <AuthHandler />
       <Layout>
         <Routes>
+          <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/surveyList" element={<SurveyList />} />

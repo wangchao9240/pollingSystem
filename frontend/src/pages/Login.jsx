@@ -30,7 +30,7 @@ const Login = () => {
       showAlert('Login successful.', 'success', 2000);
       setTimeout(() => {
         dispatch(setUser(data));
-        navigate('/surveyList');
+        navigate('/');
       }, 2000);
     } catch (error) {
       showAlert(`Server Error: ${error}`, 'info', 2000);

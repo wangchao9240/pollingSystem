@@ -1,4 +1,4 @@
-# **Assignment: Full-Stack CRUD Application Development with DevOps Practices**
+<!-- # **Assignment: Full-Stack CRUD Application Development with DevOps Practices**
 
 ## **Objective**
 
@@ -65,4 +65,80 @@ Select a meaningful use case for your CRUD operations. We will provide the list,
 * **README.md** with:
 
   * Project setup instructions.
-  * CI/CD pipeline details.
+  * CI/CD pipeline details. -->
+
+# **Assignment: Online Polling System**
+
+## Student Number: 12192856
+## Student Name: Chasen Wang
+
+## **Project Setup Instructions**
+
+### **Backend Setup**
+1. Navigate to the `backend` directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   yarn install
+   ```
+3. Create a `.env` file in the `backend` directory with the following variables:
+   ```
+   MONGO_URI=<your-mongodb-uri>
+   JWT_SECRET=<your-jwt-secret>
+   PORT=<backend-port>
+   ```
+4. Start the backend server:
+   ```bash
+   yarn start
+   ```
+
+### **Frontend Setup**
+1. Navigate to the `frontend` directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   yarn install
+   ```
+3. Start the frontend development server:
+   ```bash
+   yarn start
+   ```
+
+### **Running the Application**
+1. Ensure both the backend and frontend servers are running.
+2. Access the application in your browser at `http://localhost:<frontend-port>`.
+
+---
+
+## **CI/CD Pipeline Details**
+
+### **CI/CD Workflow**
+The CI/CD pipeline is configured using **GitHub Actions**. Below are the key steps:
+
+1. **Trigger**:
+   - The pipeline is triggered on every push to the `master` branch.
+
+2. **Backend CI**:
+   - The pipeline installs dependencies for the backend.
+   - It deploys the backend to **AWS**.
+
+3. **Frontend CI** (Optional):
+   - The pipeline installs dependencies for the frontend.
+   - It deploys the frontend to **AWS**.
+
+### **Environment Variables**
+The following secrets are configured in the GitHub repository:
+- `MONGO_URI`: MongoDB connection string.
+- `JWT_SECRET`: Secret key for JWT authentication.
+- `PORT`: Backend server port.
+
+### **Deployment**
+- The backend and frontend are deployed to AWS using the CI/CD pipeline.
+- Ensure AWS credentials are configured in the GitHub repository for deployment.
+
+For more details, refer to the `.github/workflows/ci.yml` file.
+

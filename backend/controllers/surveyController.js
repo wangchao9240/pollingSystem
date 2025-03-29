@@ -22,7 +22,7 @@ const querySurvey = async (req, res) => {
     const skip = (page - 1) * pageSize
     const surveys = await Survey.find().skip(skip).limit(parseInt(pageSize))
     const total = await Survey.countDocuments()
-
+    
     res.json({
       code: 200,
       data: {

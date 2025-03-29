@@ -104,8 +104,20 @@ const SurveyList = () => {
           <Button
             style={{ marginTop: "10px" }}
             onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/survey?id=${record._id}`)
-              showAlert("Link copied to clipboard", "success", 2000)
+              try {
+                // Try using clipboard API
+                navigator.clipboard.writeText(`${window.location.origin}/survey?id=${record._id}`)
+                showAlert("Link copied to clipboard", "success", 2000)
+              } catch (error) {
+                // Create a fallback using a temporary input element
+                const tempInput = document.createElement("input");
+                tempInput.value = `${window.location.origin}/survey?id=${record._id}`;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                showAlert("Link copied to clipboard", "success", 2000)
+              }
               setSurveyItem(record)
             }}
             variant="outlined"

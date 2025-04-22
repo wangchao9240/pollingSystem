@@ -17,7 +17,6 @@ import {
 import { useEffect, useState } from "react"
 import DialogModal from "./dialogModal"
 import axiosInstance from "../../axiosConfig"
-import { useAlert } from "../../context/AlertContext"
 import ResultDialog from "./resultDialog"
 
 import "./index.css"
@@ -36,7 +35,6 @@ const SurveyList = () => {
   const [total, setTotal] = useState(0)
   const [openDialog, setOpenDialog] = useState(false)
   const [surveyItem, setSurveyItem] = useState({})
-  const { showAlert } = useAlert()
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [openResultDialog, setOpenResultDialog] = useState(false)
 
@@ -107,7 +105,7 @@ const SurveyList = () => {
               try {
                 // Try using clipboard API
                 navigator.clipboard.writeText(`${window.location.origin}/survey?id=${record._id}`)
-                showAlert("Link copied to clipboard", "success", 2000)
+                window.$toast("Link copied to clipboard", "success", 2000)
               } catch (error) {
                 // Create a fallback using a temporary input element
                 const tempInput = document.createElement("input");
@@ -116,7 +114,7 @@ const SurveyList = () => {
                 tempInput.select();
                 document.execCommand("copy");
                 document.body.removeChild(tempInput);
-                showAlert("Link copied to clipboard", "success", 2000)
+                window.$toast("Link copied to clipboard", "success", 2000)
               }
               setSurveyItem(record)
             }}
@@ -151,13 +149,13 @@ const SurveyList = () => {
         { page: page + 1, pageSize: rowsPerPage }
       )
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
       setSurveyList(data.surveyList)
       setTotal(data.total)
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 
@@ -177,14 +175,14 @@ const SurveyList = () => {
         { _id: surveyItem._id }
       )
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
       querySurveyList()
       setOpenDeleteDialog(false)
-      showAlert("Survey deleted successfully", "success", 2000)
+      window.$toast("Survey deleted successfully", "success", 2000)
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 

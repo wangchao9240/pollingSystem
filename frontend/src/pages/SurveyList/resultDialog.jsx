@@ -8,13 +8,11 @@ import {
   Typography,
 } from "@mui/material"
 import * as echarts from "echarts"
-import { useAlert } from "../../context/AlertContext"
 import axiosInstance from "../../axiosConfig"
 
 const ResultDialog = ({ open, handleClose, survey }) => {
   const chartRef = useRef(null)
   const [result, setResult] = useState([])
-  const { showAlert } = useAlert()
 
   const fetchResuleByQuestionId = async (questionId) => {
     try {
@@ -22,12 +20,12 @@ const ResultDialog = ({ open, handleClose, survey }) => {
         `/api/survey/querySurveyResultByQuestionId/${questionId}`
       )
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
       setResult(data)
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 

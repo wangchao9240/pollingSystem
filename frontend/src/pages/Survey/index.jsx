@@ -13,13 +13,11 @@ import {
 } from "@mui/material"
 import { useLocation, useNavigate } from "react-router-dom"
 import "./Survey.css"
-import { useAlert } from "../../context/AlertContext"
 import axiosInstance from "../../axiosConfig"
 
 const Survey = () => {
   const [selectedOption, setSelectedOption] = useState([])
   const [survey, setSurvey] = useState({})
-  const { showAlert } = useAlert()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -29,12 +27,12 @@ const Survey = () => {
         `/api/survey/querySurveyItem/${id}`
       )
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
       if (data) setSurvey(data)
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 
@@ -54,10 +52,10 @@ const Survey = () => {
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (survey.type === "Single" && selectedOption.length === 0) {
-      showAlert("Please select an option", "info", 2000)
+      window.$toast("Please select an option", "info", 2000)
       return
     } else if (survey.type === "Multiple" && selectedOption.length < 2) {
-      showAlert("Please select at least two options", "info", 2000)
+      window.$toast("Please select at least two options", "info", 2000)
       return
     }
     try {
@@ -69,13 +67,13 @@ const Survey = () => {
         }
       )
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
-      showAlert("Survey completed successfully", "success", 2000)
+      window.$toast("Survey completed successfully", "success", 2000)
       navigate("/surveySuccess")
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 

@@ -16,7 +16,6 @@ import {
 import AddIcon from "@mui/icons-material/Add"
 import axiosInstance from "../../axiosConfig"
 import RemoveIcon from "@mui/icons-material/Remove"
-import { useAlert } from "../../context/AlertContext"
 
 const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
   const {
@@ -30,7 +29,6 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
     control,
     name: "options",
   })
-  const { showAlert } = useAlert()
 
   const onSubmit = async (data) => {
     if (data.options.length === 0) {
@@ -38,7 +36,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
       //   type: "manual",
       //   message: "Options are required",
       // })
-      showAlert("Options are required", "info", 2000)
+      window.$toast("Options are required", "info", 2000)
       return
     }
     // const { correctAnswer, type } = data
@@ -67,15 +65,15 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
         message,
       } = await axiosInstance.post("/api/survey/addOrUpdateSurvey", data)
       if (code !== 200) {
-        showAlert(message, "info", 2000)
+        window.$toast(message, "info", 2000)
         return
       }
-      showAlert("operate successfully.", "success", 2000)
+      window.$toast("operate successfully.", "success", 2000)
       handleClose()
       querySurveyList()
 
     } catch (error) {
-      showAlert(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000)
     }
   }
 

@@ -2,32 +2,30 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import { Button, Input } from '@mui/material';
-import { useAlert } from '../context/AlertContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const navigate = useNavigate();
-  const { showAlert } = useAlert();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.name === '' || formData.email === '' || formData.password === '') {
-      showAlert('Please fill all fields.', 'info', 2000);
+      window.$toast('Please fill all fields.', 'info', 2000);
       return;
     }
     try {
       const { code, message } = await axiosInstance.post('/api/auth/register', formData);
       if (code !== 200) {
-        showAlert(message, 'info', 2000);
+        window.$toast(message, 'info', 2000);
         return;
       }
-      showAlert('Registration successful. Please log in.', 'success', 2000);
+      window.$toast('Registration successful. Please log in.', 'success', 2000);
       setTimeout(() => {
         navigate('/login');
       }
       , 2000);
     } catch (error) {
-      showAlert(`Server Error: ${error}`, 'info', 2000);
+      window.$toast(`Server Error: ${error}`, 'info', 2000);
     }
   };
 

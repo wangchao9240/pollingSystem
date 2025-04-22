@@ -1,13 +1,7 @@
-import { createContext, useContext, useState } from "react"
-import { Alert, Snackbar } from "@mui/material"
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { Alert, Snackbar } from "@mui/material";
 
-const AlertComponent = ({
-  msgType,
-  messageContent,
-  durationTime,
-  open,
-  onClose,
-}) => {
+const AlertComponent = ({ msgType, messageContent, durationTime, open, onClose }) => {
   return (
     <Snackbar
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -15,60 +9,56 @@ const AlertComponent = ({
       autoHideDuration={durationTime}
       onClose={onClose}
     >
-      <Alert
-        onClose={null}
-        severity={msgType}
-        sx={{ width: "100%" }}
-      >
+      <Alert onClose={null} severity={msgType} sx={{ width: "100%" }}>
         {messageContent}
       </Alert>
     </Snackbar>
-  )
-}
+  );
+};
 
-export default AlertComponent
+export default AlertComponent;
 
-const AlertContext = createContext()
+export const AlertContext = createContext();
 
 export const AlertProvider = ({ children }) => {
-  const [alertState, setAlertState] = useState({
-    open: false,
-    type: "info",
-    message: "",
-    duration: 3000,
-  })
+  const [alerts, setAlerts] = useState([]);
 
-  const showAlert = (message, type = "info", duration = 2000) => {
-    setAlertState({
-      open: true,
-      type,
-      message,
-      duration,
-    })
-  }
+  const showAlert = (message, type = "info", duration = 3000) => {
+    setAlerts((prevAlerts) => [
+      ...prevAlerts,
+      { message, type, duration, open: true },
+    ]);
+  };
 
-  const hideAlert = () => {
-    setAlertState((prev) => ({ ...prev, open: false }))
-  }
+  useEffect(() => {
+    window.$toast = showAlert;
+
+    return () => {
+      delete window.$toast;
+    };
+  }, []);
 
   return (
-    <AlertContext.Provider value={{ showAlert, hideAlert }}>
-      <AlertComponent
-        msgType={alertState.type}
-        messageContent={alertState.message}
-        durationTime={alertState.duration}
-        open={alertState.open}
-        onClose={hideAlert}
-      />
+    <AlertContext.Provider value={{ alerts, showAlert }}>
+      {alerts.map((alert, index) => (
+        <AlertComponent
+          key={index}
+          msgType={alert.type}
+          messageContent={alert.message}
+          durationTime={alert.duration}
+          open={alert.open}
+          onClose={() =>
+            setAlerts((prevAlerts) =>
+              prevAlerts.map((a, i) =>
+                i === index ? { ...a, open: false } : a
+              )
+            )
+          }
+        />
+      ))}
       {children}
     </AlertContext.Provider>
-  )
-}
+  );
+};
 
-export const useAlert = () => {
-  const context = useContext(AlertContext)
-  if (!context) {
-    throw new Error("useAlert must be used within an AlertProvider")
-  }
-  return context
-}
+export const useAlert = () => useContext(AlertContext);

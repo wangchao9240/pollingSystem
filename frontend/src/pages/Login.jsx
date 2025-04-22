@@ -4,19 +4,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUser, setLoading } from '../store/authSlice';
 import axiosInstance from '../axiosConfig';
 import { Button, Input } from '@mui/material';
-import { useAlert } from '../context/AlertContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
-  const { showAlert } = useAlert();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.email === '' || formData.password === '') {
-      showAlert('Please fill all fields.', 'info', 2000);
+      window.$toast('Please fill all fields.', 'info', 2000);
       return;
     }
 
@@ -24,16 +22,16 @@ const Login = () => {
       dispatch(setLoading(true));
       const { code, data, message } = await axiosInstance.post('/api/auth/login', formData);
       if (code !== 200) {
-        showAlert(message, 'info', 2000);
+        window.$toast(message, 'info', 2000);
         return;
       }
-      showAlert('Login successful.', 'success', 2000);
+      window.$toast('Login successful.', 'success', 2000);
       setTimeout(() => {
         dispatch(setUser(data));
         navigate('/');
       }, 2000);
     } catch (error) {
-      showAlert(`Server Error: ${error}`, 'info', 2000);
+      window.$toast(`Server Error: ${error}`, 'info', 2000);
     } finally {
       dispatch(setLoading(false));
     }

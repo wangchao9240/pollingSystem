@@ -23,7 +23,7 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         if (code !== 200) {
-          showAlert(message, 'info', 2000);
+          window.$toast(message, 'info', 2000);
           return;
         }
         setFormData({
@@ -33,7 +33,7 @@ const Profile = () => {
           address: data.address || '',
         });
       } catch (error) {
-        showAlert(`Server Error: ${error}`, 'info', 2000);
+        window.$toast(`Server Error: ${error}`, 'info', 2000);
       } finally {
         setLoading(false);
       }
@@ -50,12 +50,12 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       if (code !== 200) {
-        showAlert(message, 'info', 2000);
+        window.$toast(message, 'info', 2000);
         return;
       }
-      showAlert('Profile updated successfully!');
+      window.$toast('Profile updated successfully!');
     } catch (error) {
-      showAlert(`Server Error: ${error}`, 'info', 2000);
+      window.$toast(`Server Error: ${error}`, 'info', 2000);
     } finally {
       setLoading(false);
     }

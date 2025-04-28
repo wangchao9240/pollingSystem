@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Typography,
   Box,
   IconButton,
@@ -34,12 +33,6 @@ const CancelButton = styled(Button)(({ theme }) => ({
   '&:hover': {
     backgroundColor: 'rgba(0, 0, 0, 0.04)',
   },
-}));
-
-const ButtonLabel = styled(Typography)(({ theme }) => ({
-  color: '#999',
-  fontSize: '14px',
-  marginRight: 'auto', // Push to left
 }));
 
 const DeleteDialog = ({ open, handleClose, handleDelete }) => {

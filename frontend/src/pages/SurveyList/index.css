@@ -65,3 +65,32 @@ input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit {
   background-color: #e2e8f0;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Survey Table styling */
+.MuiTableHead-root .MuiTableCell-root {
+  background-color: #e0e0e0 !important;
+  font-weight: bold;
+  color: #424242;
+}
+
+.MuiTableRow-root:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Style for Action buttons in the table */
+.MuiTableCell-root .MuiButton-root {
+  text-transform: none;
+  border-radius: 20px;
+  min-width: 80px;
+}
+
+/* Fix for Action button */
+.MuiButton-root.MuiButton-outlined {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Add this to ensure action buttons appear */
+.MuiTableCell-root button {
+  display: inline-flex !important;
+}

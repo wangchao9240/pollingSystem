@@ -204,6 +204,8 @@ const SurveyList = () => {
       format: (value, record) => (
         <ActionButton
           onClick={(e) => handleMenuOpen(e, record)}
+          variant="outlined"
+          size="small"
         >
           Action
         </ActionButton>

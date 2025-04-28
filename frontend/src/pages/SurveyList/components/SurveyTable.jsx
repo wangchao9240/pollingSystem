@@ -25,8 +25,11 @@ const SurveyTable = ({ columns, surveyList }) => {
             {columns.map((column) => (
               <TableCell
                 key={column.id}
-                align={column.align || 'left'}
-                style={{ minWidth: column.minWidth }}
+                align={column.align}
+                style={{
+                  minWidth: column.minWidth,
+                  backgroundColor: "#e0e0e0", // Gray header background
+                }}
               >
                 {column.label}
               </TableCell>
@@ -35,14 +38,23 @@ const SurveyTable = ({ columns, surveyList }) => {
         </TableHead>
         <TableBody>
           {surveyList.map((row) => (
-            <TableRow hover role="checkbox" tabIndex={-1} key={row._id}>
+            <TableRow 
+              hover 
+              tabIndex={-1} 
+              key={row._id}
+              sx={{ 
+                "&:nth-of-type(odd)": { backgroundColor: "#f5f5f5" },  // Light gray for odd rows
+              }}
+            >
               {columns.map((column) => {
                 const value = row[column.id];
                 return (
-                  <TableCell key={column.id} align={column.align || 'left'}>
-                    {column.format && typeof column.format === 'function'
+                  <TableCell key={column.id} align={column.align}>
+                    {column.format && column.id === "actions" 
                       ? column.format(value, row)
-                      : value}
+                      : column.format && typeof value !== 'undefined'
+                        ? column.format(value, row)
+                        : value}
                   </TableCell>
                 );
               })}

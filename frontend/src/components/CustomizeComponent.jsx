@@ -36,20 +36,19 @@ export const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 // Button components
-export const ActionButton = styled(Button)({
-  borderRadius: '20px',
-  textTransform: 'none',
-  fontSize: '0.9rem',
-  padding: '5px 15px',
-  border: '1px solid #e0e0e0',
-  backgroundColor: '#ffffff',
-  color: '#000000',
-  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+export const ActionButton = styled(Button)(({ theme }) => ({
+  textTransform: "none",
+  borderRadius: "20px",
+  backgroundColor: "#fff",
+  border: "1px solid #ccc",
+  color: theme.palette.text.primary,
+  padding: "4px 15px",
+  minWidth: "80px",
   '&:hover': {
-    backgroundColor: '#f5f5f5',
-    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.1)',
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
+    borderColor: "#bbb",
   }
-});
+}));
 
 // Search button style
 export const SearchButton = styled(Button)({

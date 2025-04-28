@@ -2,25 +2,44 @@ import {
   Button,
   Dialog,
   Paper,
-  Table,
   TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TablePagination,
   TableRow,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Menu,
+  MenuItem,
+  IconButton,
+  Select,
+  InputLabel,
 } from "@mui/material"
+import EditIcon from '@mui/icons-material/Edit';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import EqualizerIcon from '@mui/icons-material/Equalizer';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from "react"
 import DialogModal from "./dialogModal"
 import axiosInstance from "../../axiosConfig"
 import ResultDialog from "./resultDialog"
+import {
+  StyledTableContainer,
+  StyledTable,
+  StyledTableHead,
+  StyledTableRow,
+  ActionButton,
+  SearchContainer,
+  SearchField,
+  StatusSelect,
+  SearchButton,
+  AddButton,
+  SearchInputGroup,
+  SearchButtonGroup,
+} from "../../components/CustomizeComponent"
 
 import "./index.css"
-// import { format } from "echarts"
 
 const initialSurvey = {
   title: "",
@@ -37,14 +56,26 @@ const SurveyList = () => {
   const [surveyItem, setSurveyItem] = useState({})
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [openResultDialog, setOpenResultDialog] = useState(false)
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleMenuOpen = (event, row) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRow(row);
+    setSurveyItem(row);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const columns = [
-    { id: "title", label: "SurveyTitle", minWidth: 120 },
-    { id: "completeCount", label: "Complete Count", minWidth: 100 },
+    { id: "title", label: "Survey Title", minWidth: 200 },
+    { id: "completeCount", label: "Complete Count", minWidth: 150 },
     {
       id: "surveyStatus",
       label: "Status",
-      minWidth: 100,
+      minWidth: 120,
       format: (value) => {
         if (value === 0) return "Inactive"
         if (value === 1) return "Active"
@@ -52,8 +83,8 @@ const SurveyList = () => {
       },
     },
     {
-      id: "createdAt",
-      label: "Created At",
+      id: "modifyAt",
+      label: "modifyAt",
       minWidth: 100,
       format: (value) =>
         new Date(value).toLocaleString("en-GB", {
@@ -66,8 +97,8 @@ const SurveyList = () => {
         }),
     },
     {
-      id: "modifyAt",
-      label: "Modify At",
+      id: "createdAt",
+      label: "createdAt",
       minWidth: 100,
       format: (value) =>
         new Date(value).toLocaleString("en-GB", {
@@ -81,80 +112,24 @@ const SurveyList = () => {
     },
     {
       id: "actions",
-      label: "Actions",
-      width: 220,
-      align: "right",
+      label: "Action",
+      minWidth: 120,
+      align: "center",
       format: (value, record) => (
         <div>
-          <Button
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenDialog(true)
-            }}
-            variant="outlined"
-            size="small"
-            color="primary"
-          >
-            Edit
-          </Button>
-          <Button
-            style={{ marginLeft: "8px" }}
-            variant="outlined"
-            size="small"
-            color="primary"
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenDeleteDialog(true)
-            }}
-          >
-            Delete
-          </Button>
-          <Button
-            style={{ marginTop: "10px" }}
-            onClick={() => {
-              try {
-                // Try using clipboard API
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/survey?id=${record._id}`
-                )
-                window.$toast("Link copied to clipboard", "success", 2000)
-              } catch (error) {
-                // Create a fallback using a temporary input element
-                const tempInput = document.createElement("input")
-                tempInput.value = `${window.location.origin}/survey?id=${record._id}`
-                document.body.appendChild(tempInput)
-                tempInput.select()
-                document.execCommand("copy")
-                document.body.removeChild(tempInput)
-                window.$toast("Link copied to clipboard", "success", 2000)
-              }
-              setSurveyItem(record)
-            }}
-            variant="outlined"
-            size="small"
-            color="primary"
-          >
-            Copy Link
-          </Button>
-          <Button
-            style={{ marginLeft: "8px", marginTop: "10px" }}
-            variant="outlined"
-            size="small"
-            color="primary"
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenResultDialog(true)
-            }}
-          >
-            Result
-          </Button>
+          <IconButton
+            aria-label="more"
+            onClick={(e) => handleMenuOpen(e, record)}
+            >
+            <ActionButton>Action</ActionButton>
+            {/* <MoreVertIcon /> */}
+          </IconButton>
         </div>
       ),
     },
   ]
 
   const querySurveyList = async () => {
-    // fetch survey list
     try {
       const { code, data, message } = await axiosInstance.get(
         "/api/survey/surveyList",
@@ -194,10 +169,29 @@ const SurveyList = () => {
       }
       querySurveyList()
       setOpenDeleteDialog(false)
+      handleMenuClose();
       window.$toast("Survey deleted successfully", "success", 2000)
     } catch (error) {
       window.$toast(`Server Error: ${error}`, "info", 2000)
     }
+  }
+  
+  const handleCopyLink = (record) => {
+    try {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/survey?id=${record._id}`
+      )
+      window.$toast("Link copied to clipboard", "success", 2000)
+    } catch (error) {
+      const tempInput = document.createElement("input")
+      tempInput.value = `${window.location.origin}/survey?id=${record._id}`
+      document.body.appendChild(tempInput)
+      tempInput.select()
+      document.execCommand("copy")
+      document.body.removeChild(tempInput)
+      window.$toast("Link copied to clipboard", "success", 2000)
+    }
+    handleMenuClose();
   }
 
   useEffect(() => {
@@ -206,50 +200,80 @@ const SurveyList = () => {
   }, [page, rowsPerPage])
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <div className="button-wrapper">
-        <Button
-          variant="contained"
-          onClick={() => {
-            setSurveyItem(initialSurvey)
-            setOpenDialog(true)
-          }}
-        >
-          Add
-        </Button>
-      </div>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="sticky table">
-          <TableHead>
+    <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
+      <SearchContainer>
+        {/* 左侧三个输入框分组 */}
+        <SearchInputGroup>
+          <SearchField 
+            placeholder="Please input survey title" 
+            size="small"
+          />
+          <StatusSelect size="small">
+            <InputLabel>Please select status</InputLabel>
+            <Select
+              label="Please select status"
+              value=""
+            >
+              <MenuItem value={1}>Active</MenuItem>
+              <MenuItem value={0}>Inactive</MenuItem>
+            </Select>
+          </StatusSelect>
+          <SearchField 
+            placeholder="Please select date" 
+            size="small" 
+            type="date"
+            InputLabelProps={{ shrink: true }}
+          />
+        </SearchInputGroup>
+
+        {/* 右侧两个按钮分组 */}
+        <SearchButtonGroup>
+          <SearchButton variant="contained">Search</SearchButton>
+          <AddButton
+            onClick={() => {
+              setSurveyItem(initialSurvey)
+              setOpenDialog(true)
+            }}
+          >
+            Add
+          </AddButton>
+        </SearchButtonGroup>
+      </SearchContainer>
+      
+      <StyledTableContainer>
+        <StyledTable stickyHeader aria-label="sticky table">
+          <StyledTableHead>
             <TableRow>
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
+                  align={column.align || "left"}
                   style={{ minWidth: column.minWidth, width: column.width }}
                 >
                   {column.label}
                 </TableCell>
               ))}
             </TableRow>
-          </TableHead>
+          </StyledTableHead>
           <TableBody>
             {surveyList.map((row, idx) => {
               return (
-                <TableRow hover role="checkbox" tabIndex={-1} key={idx}>
+                <StyledTableRow hover role="checkbox" tabIndex={-1} key={idx}>
                   {columns.map((column) => {
                     const value = row[column.id]
                     return (
-                      <TableCell key={column.id} align={column.align}>
+                      <TableCell key={column.id} align={column.align || "left"}>
                         {column.format ? column.format(value, row) : value}
                       </TableCell>
                     )
                   })}
-                </TableRow>
+                </StyledTableRow>
               )
             })}
           </TableBody>
-        </Table>
-      </TableContainer>
+        </StyledTable>
+      </StyledTableContainer>
+      
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
@@ -258,7 +282,43 @@ const SurveyList = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
+        labelRowsPerPage="Rows per page:"
       />
+      
+      {/* Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => {
+          setOpenDialog(true);
+          handleMenuClose();
+        }}>
+          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={() => handleCopyLink(selectedRow)}>
+          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+          Copy Link
+        </MenuItem>
+        <MenuItem onClick={() => {
+          setOpenResultDialog(true);
+          handleMenuClose();
+        }}>
+          <EqualizerIcon fontSize="small" sx={{ mr: 1 }} />
+          Result
+        </MenuItem>
+        <MenuItem onClick={() => {
+          setOpenDeleteDialog(true);
+          handleMenuClose();
+        }}>
+          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
+      
       <DialogModal
         querySurveyList={querySurveyList}
         open={openDialog}

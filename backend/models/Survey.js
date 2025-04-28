@@ -1,15 +1,13 @@
 const mongoose = require("mongoose")
 
 const surveySchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  type: { type: String, required: true },
-  options: [
-    {
-      optionKey: { type: String, required: true },
-      optionValue: { type: String, required: true },
-    },
-  ],
-  // correctAnswer: [{ type: String, required: true }],
+  title: { type: String, required: true },
+  questions: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Question' 
+  }],
+  completeCount: { type: Number, default: 0 },
+  surveyStatus: { type: Number, default: 0 }, // 0: inactive, 1: active
   createdAt: { type: Date, default: Date.now },
   modifyAt: { type: Date, default: Date.now },
 })

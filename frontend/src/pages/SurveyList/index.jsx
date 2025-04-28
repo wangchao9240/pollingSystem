@@ -20,12 +20,12 @@ import axiosInstance from "../../axiosConfig"
 import ResultDialog from "./resultDialog"
 
 import "./index.css"
+// import { format } from "echarts"
 
 const initialSurvey = {
-  question: "",
-  type: "",
-  correctAnswer: [],
-  options: [],
+  title: "",
+  surveyStatus: 0,
+  questions: [],
 }
 
 const SurveyList = () => {
@@ -39,8 +39,18 @@ const SurveyList = () => {
   const [openResultDialog, setOpenResultDialog] = useState(false)
 
   const columns = [
-    { id: "question", label: "Question", minWidth: 170 },
-    { id: "type", label: "Type", minWidth: 100 },
+    { id: "title", label: "SurveyTitle", minWidth: 120 },
+    { id: "completeCount", label: "Complete Count", minWidth: 100 },
+    {
+      id: "surveyStatus",
+      label: "Status",
+      minWidth: 100,
+      format: (value) => {
+        if (value === 0) return "Inactive"
+        if (value === 1) return "Active"
+        else return "--"
+      },
+    },
     {
       id: "createdAt",
       label: "Created At",
@@ -104,16 +114,18 @@ const SurveyList = () => {
             onClick={() => {
               try {
                 // Try using clipboard API
-                navigator.clipboard.writeText(`${window.location.origin}/survey?id=${record._id}`)
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/survey?id=${record._id}`
+                )
                 window.$toast("Link copied to clipboard", "success", 2000)
               } catch (error) {
                 // Create a fallback using a temporary input element
-                const tempInput = document.createElement("input");
-                tempInput.value = `${window.location.origin}/survey?id=${record._id}`;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
+                const tempInput = document.createElement("input")
+                tempInput.value = `${window.location.origin}/survey?id=${record._id}`
+                document.body.appendChild(tempInput)
+                tempInput.select()
+                document.execCommand("copy")
+                document.body.removeChild(tempInput)
                 window.$toast("Link copied to clipboard", "success", 2000)
               }
               setSurveyItem(record)
@@ -146,7 +158,9 @@ const SurveyList = () => {
     try {
       const { code, data, message } = await axiosInstance.get(
         "/api/survey/surveyList",
-        { page: page + 1, pageSize: rowsPerPage }
+        {
+          params: { page: page + 1, pageSize: rowsPerPage },
+        }
       )
       if (code !== 200) {
         window.$toast(message, "info", 2000)
@@ -248,7 +262,10 @@ const SurveyList = () => {
       <DialogModal
         querySurveyList={querySurveyList}
         open={openDialog}
-        handleClose={() => setOpenDialog(false)}
+        handleClose={() => {
+          setOpenDialog(false)
+          setSurveyItem(initialSurvey)
+        }}
         survey={surveyItem}
       />
       <DeleteDialog

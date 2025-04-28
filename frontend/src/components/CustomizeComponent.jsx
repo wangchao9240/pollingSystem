@@ -53,16 +53,15 @@ export const ActionButton = styled(Button)({
 
 // Search button style
 export const SearchButton = styled(Button)({
+  backgroundColor: '#3b82f6',
+  color: 'white',
   borderRadius: '100px',
-  padding: '10px 24px',
+  padding: '8px 24px',
+  fontSize: '14px',
   textTransform: 'none',
-  fontSize: '1rem',
-  backgroundColor: '#3b82f6', // Blue button
-  color: '#ffffff',
-  boxShadow: 'none',
+  fontWeight: 'normal',
   '&:hover': {
     backgroundColor: '#2563eb',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
 });
 

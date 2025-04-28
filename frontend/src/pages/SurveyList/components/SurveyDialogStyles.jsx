@@ -73,11 +73,10 @@ export const InlineFormSection = styled(Box)(({ theme }) => ({
   alignItems: 'center',
 }));
 
-export const InlineSectionLabel = styled(Typography)(({ theme, width, paddingBottom }) => ({
+export const InlineSectionLabel = styled(Typography)(({ theme, width }) => ({
   fontWeight: 400,
   fontSize: '14px',
   color: '#000',
-  padding: paddingBottom ? '0 0 20px 0' : '0',
   width: width || '100px', // 使用传入的宽度或默认值
   flexShrink: 0,
 }));

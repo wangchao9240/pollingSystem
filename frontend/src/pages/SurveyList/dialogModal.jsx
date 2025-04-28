@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback, useMemo } from "react"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import {
   DialogActions,
@@ -14,7 +14,7 @@ import {
   MenuItem,
 } from "@mui/material"
 import AddIcon from "@mui/icons-material/Add"
-import DeleteIcon from "@mui/icons-material/Delete"
+import DeleteIcon from "@mui/icons-material/DeleteOutlined"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
 import CloseIcon from "@mui/icons-material/Close"
@@ -33,11 +33,193 @@ import {
   AddButton,
   ActionButton,
   QuestionButton,
-  SaveButton,
   InlineFormSection,
   InlineSectionLabel,
   InlineFieldContainer,
 } from "./components/SurveyDialogStyles"
+import { SearchButton } from "../../components/CustomizeComponent"
+
+// Option input component - improve reusability
+const OptionInputField = React.memo(({ 
+  questionIndex, 
+  optionIndex, 
+  option, 
+  control, 
+  removeOption 
+}) => {
+  return (
+    <Box
+      display="flex"
+      alignItems="center"
+      mb={1}
+    >
+      <OptionLabel>{option.optionKey}</OptionLabel>
+      <Controller
+        name={`questions[${questionIndex}].options[${optionIndex}].optionValue`}
+        control={control}
+        rules={{ required: "Option text is required" }}
+        render={({ field, fieldState: { error } }) => (
+          <OptionInput
+            {...field}
+            fullWidth
+            placeholder="Please input option text"
+            variant="outlined"
+            error={!!error}
+            helperText={error ? error.message : null}
+          />
+        )}
+      />
+      <IconButton
+        size="small"
+        onClick={() => removeOption(questionIndex, optionIndex)}
+        sx={{ color: "#666", ml: 1 }}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </Box>
+  )
+})
+
+// Question component - separate complex logic
+const QuestionItem = React.memo(({
+  field,
+  questionIndex,
+  watchQuestion,
+  control,
+  expanded,
+  toggleQuestion,
+  removeQuestion,
+  addOption,
+  removeOption,
+  watch
+}) => {
+  return (
+    <QuestionCard key={field.fieldId}>
+      <QuestionHeader
+        expanded={expanded}
+        onClick={() => toggleQuestion(questionIndex)}
+      >
+        <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
+          {watchQuestion?.question || `Question${questionIndex + 1}`}
+        </Typography>
+        <Box display="flex" alignItems="center">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              removeQuestion(questionIndex)
+            }}
+            sx={{ color: "#666" }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+          {expanded ? (
+            <KeyboardArrowUpIcon sx={{ color: "#666" }} />
+          ) : (
+            <KeyboardArrowDownIcon sx={{ color: "#666" }} />
+          )}
+        </Box>
+      </QuestionHeader>
+
+      {expanded && (
+        <QuestionContent>
+          {/* Question Title - inline layout */}
+          <InlineFormSection>
+            <InlineSectionLabel>title</InlineSectionLabel>
+            <InlineFieldContainer>
+              <Controller
+                name={`questions[${questionIndex}].question`}
+                control={control}
+                rules={{ required: "Question title is required" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    placeholder="Please input question title"
+                    variant="outlined"
+                    error={!!error}
+                    helperText={error ? error.message : null}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "4px",
+                      },
+                      "& .MuiOutlinedInput-input": {
+                        padding: "10px 14px",
+                      },
+                    }}
+                  />
+                )}
+              />
+            </InlineFieldContainer>
+          </InlineFormSection>
+
+          {/* Question Type - inline layout */}
+          <InlineFormSection>
+            <InlineSectionLabel>type</InlineSectionLabel>
+            <InlineFieldContainer>
+              <Controller
+                name={`questions[${questionIndex}].type`}
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    select
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "4px",
+                      },
+                      "& .MuiSelect-select": {
+                        padding: "10px 14px",
+                      },
+                    }}
+                  >
+                    <MenuItem value="Single">Single Choice</MenuItem>
+                    <MenuItem value="Multiple">
+                      Multiple Choice
+                    </MenuItem>
+                  </TextField>
+                )}
+              />
+            </InlineFieldContainer>
+          </InlineFormSection>
+
+          {/* Options Section - fix layout issues */}
+            <InlineSectionLabel><div style={{ paddingBottom: '20px' }}>options</div></InlineSectionLabel>
+            <InlineFieldContainer>
+              {/* Option Inputs */}
+              {(watch(`questions[${questionIndex}].options`) || []).map(
+                (option, optionIndex) => (
+                  <OptionInputField
+                    key={`${questionIndex}-${optionIndex}`}
+                    questionIndex={questionIndex}
+                    optionIndex={optionIndex}
+                    option={option}
+                    control={control}
+                    removeOption={removeOption}
+                  />
+                )
+              )}
+
+              {/* Add Option Button */}
+              <AddButton
+                startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+                onClick={() => {
+                  console.log("Add option clicked for question", questionIndex);
+                  addOption(questionIndex);
+                }}
+                sx={{ mt: 1 }}
+              >
+                Add Option
+              </AddButton>
+            </InlineFieldContainer>
+        </QuestionContent>
+      )}
+    </QuestionCard>
+  )
+})
 
 const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
   const {
@@ -73,40 +255,84 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
   const [expandedQuestion, setExpandedQuestion] = useState(null)
 
   // Toggle question expansion
-  const toggleQuestion = (index) => {
-    setExpandedQuestion(expandedQuestion === index ? null : index)
-  }
+  const toggleQuestion = useCallback((index) => {
+    setExpandedQuestion(prevExpanded => prevExpanded === index ? null : index)
+  }, [])
 
-  // Handle form submission
-  const onSubmit = async (data) => {
-    console.log("Form Data: ", data)
-    if (validateSurveyData(data) !== true) {
-      return
-    }
+  // Generate option label (A, B, C, etc)
+  const generateOptionLabel = useCallback((index) => {
+    return String.fromCharCode(65 + index) // 65 is ASCII for 'A'
+  }, [])
 
+  // Add an option to a question - optimize with useCallback
+  const addOption = useCallback((questionIndex) => {
+    console.log("Adding option to question", questionIndex);
     try {
-      const { code, message } = await axiosInstance.post(
-        "/api/survey/addOrUpdateSurvey",
-        data
-      )
-
-      if (code !== 200) {
-        window.$toast(message, "info", 2000)
-        return
-      }
-
-      window.$toast("operate successfully.", "success", 2000)
-      handleClose()
-      querySurveyList()
+      // 获取当前选项
+      const currentOptions = watch(`questions[${questionIndex}].options`) || [];
+      console.log("Current options:", currentOptions);
+      
+      // 创建新选项
+      const newOption = {
+        optionKey: String.fromCharCode(65 + currentOptions.length),
+        optionValue: "",
+      };
+      console.log("New option:", newOption);
+      
+      // 更新选项列表
+      setValue(`questions[${questionIndex}].options`, [
+        ...currentOptions,
+        newOption
+      ]);
+      
+      // 强制触发表单值更新
+      setValue(`questions[${questionIndex}]`, {
+        ...watch(`questions[${questionIndex}`),
+        options: [...currentOptions, newOption]
+      }, { shouldDirty: true });
+      
+      // 触发重新渲染
+      setTimeout(() => {
+        setValue('forceUpdate', Date.now());
+      }, 0);
+      
+      console.log("Options updated");
     } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000)
+      console.error("Error adding option:", error);
     }
-  }
+  }, [watch, setValue]);
 
-  // Validate survey data
-  const validateSurveyData = (data) => {
-    let isValid = true
+  // Remove an option - optimize with useCallback
+  const removeOption = useCallback((questionIndex, optionIndex) => {
+    const currentOptions = [...watch(`questions[${questionIndex}].options`)]
+    currentOptions.splice(optionIndex, 1)
 
+    // Regenerate option keys to maintain sequence
+    const updatedOptions = currentOptions.map((opt, idx) => ({
+      ...opt,
+      optionKey: String.fromCharCode(65 + idx),
+    }))
+
+    setValue(`questions[${questionIndex}].options`, updatedOptions)
+  }, [watch, setValue])
+
+  // Add a new question - optimize with useCallback
+  const addNewQuestion = useCallback(() => {
+    const newIndex = questionFields.length
+    appendQuestion({
+      question: `Question${newIndex + 1}`,
+      type: "Single",
+      options: [],
+    })
+
+    // Expand the newly added question
+    setTimeout(() => {
+      setExpandedQuestion(newIndex)
+    }, 100)
+  }, [questionFields, appendQuestion])
+
+  // Validate survey data - optimize with useCallback
+  const validateSurveyData = useCallback((data) => {
     // Check if title is empty
     if (!data.title || data.title.trim() === "") {
       window.$toast("Survey title is required", "info", 2000)
@@ -126,10 +352,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
       // Check question title
       if (!q.question || q.question.trim() === "") {
         window.$toast(`Question ${i + 1} requires a title`, "info", 2000)
-
-        // Expand the problematic question
         setExpandedQuestion(i)
-
         return false
       }
 
@@ -140,10 +363,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
           "info",
           2000
         )
-
-        // Expand the problematic question
         setExpandedQuestion(i)
-
         return false
       }
 
@@ -156,78 +376,43 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
             "info",
             2000
           )
-
-          // Expand the problematic question
           setExpandedQuestion(i)
-
           return false
         }
       }
     }
 
     return true
-  }
+  }, [])
 
-  // Reset form when survey data changes
-  useEffect(() => {
-    if (survey) {
-      reset(survey)
-
-      // Expand the first question by default or keep all collapsed
-      if (survey.questions && survey.questions.length > 0) {
-        setExpandedQuestion(null) // Start with collapsed questions
-      }
+  // Handle form submission - optimize with useCallback
+  const onSubmit = useCallback(async (data) => {
+    console.log("Form Data: ", data)
+    if (validateSurveyData(data) !== true) {
+      return
     }
-  }, [survey, reset, open])
 
-  // Add a new question
-  const addNewQuestion = () => {
-    const newIndex = questionFields.length
-    appendQuestion({
-      question: `Question${newIndex + 1}`,
-      type: "Single",
-      options: [],
-    })
+    try {
+      const { code, message } = await axiosInstance.post(
+        "/api/survey/addOrUpdateSurvey",
+        data
+      )
+      
+      if (code !== 200) {
+        window.$toast(message, "info", 2000)
+        return
+      }
 
-    // Expand the newly added question
-    setTimeout(() => {
-      setExpandedQuestion(newIndex)
-    }, 300)
-  }
-
-  // Generate option label (A, B, C, etc)
-  const generateOptionLabel = (index) => {
-    return String.fromCharCode(65 + index) // 65 is ASCII for 'A'
-  }
-
-  // Add an option to a question
-  const addOption = (questionIndex) => {
-    const currentOptions = watch(`questions[${questionIndex}].options`) || []
-    setValue(`questions[${questionIndex}].options`, [
-      ...currentOptions,
-      {
-        optionKey: generateOptionLabel(currentOptions.length),
-        optionValue: "",
-      },
-    ])
-  }
-
-  // Remove an option
-  const removeOption = (questionIndex, optionIndex) => {
-    const currentOptions = [...watch(`questions[${questionIndex}].options`)]
-    currentOptions.splice(optionIndex, 1)
-
-    // Regenerate option keys to maintain sequence
-    const updatedOptions = currentOptions.map((opt, idx) => ({
-      ...opt,
-      optionKey: generateOptionLabel(idx),
-    }))
-
-    setValue(`questions[${questionIndex}].options`, updatedOptions)
-  }
+      window.$toast("operate successfully.", "success", 2000)
+      handleClose()
+      querySurveyList()
+    } catch (error) {
+      window.$toast(`Server Error: ${error}`, "info", 2000)
+    }
+  }, [validateSurveyData, handleClose, querySurveyList])
 
   // Handle save button click
-  const handleSaveClick = () => {
+  const handleSaveClick = useCallback(() => {
     console.log("Save button clicked")
     handleSubmit(
       (data) => {
@@ -256,7 +441,19 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
         }
       }
     )()
-  }
+  }, [handleSubmit, onSubmit])
+
+  // Reset form when survey data changes
+  useEffect(() => {
+    if (survey) {
+      reset(survey)
+
+      // Expand the first question by default or keep all collapsed
+      if (survey.questions && survey.questions.length > 0) {
+        setExpandedQuestion(null) // Start with collapsed questions
+      }
+    }
+  }, [survey, reset, open])
 
   return (
     <StyledDialog
@@ -331,9 +528,7 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
               render={({ field }) => (
                 <RadioGroup
                   row
-                  value={
-                    field.value !== undefined ? field.value.toString() : "0"
-                  }
+                  value={field.value !== undefined ? field.value.toString() : "0"}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                 >
                   <FormControlLabel
@@ -359,152 +554,19 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
 
           {/* Question Cards */}
           {questionFields.map((field, questionIndex) => (
-            <QuestionCard key={field.fieldId}>
-              <QuestionHeader
-                expanded={expandedQuestion === questionIndex}
-                onClick={() => toggleQuestion(questionIndex)}
-              >
-                <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
-                  {watchAllQuestions[questionIndex]?.question ||
-                    `Question${questionIndex + 1}`}
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeQuestion(questionIndex)
-                    }}
-                    sx={{ color: "#666" }}
-                  >
-                    <DeleteIcon  fontSize="small" />
-                  </IconButton>
-                  {expandedQuestion === questionIndex ? (
-                    <KeyboardArrowUpIcon sx={{ color: "#666" }} />
-                  ) : (
-                    <KeyboardArrowDownIcon sx={{ color: "#666" }} />
-                  )}
-                </Box>
-              </QuestionHeader>
-
-              {expandedQuestion === questionIndex && (
-                <QuestionContent>
-                  {/* Question Title - inline layout */}
-                  <InlineFormSection>
-                    <InlineSectionLabel>title</InlineSectionLabel>
-                    <InlineFieldContainer>
-                      <Controller
-                        name={`questions[${questionIndex}].question`}
-                        control={control}
-                        rules={{ required: "Question title is required" }}
-                        render={({ field, fieldState: { error } }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            placeholder="Please input question title"
-                            variant="outlined"
-                            error={!!error}
-                            helperText={error ? error.message : null}
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                borderRadius: "4px",
-                              },
-                              "& .MuiOutlinedInput-input": {
-                                padding: "10px 14px",
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </InlineFieldContainer>
-                  </InlineFormSection>
-
-                  {/* Question Type - inline layout */}
-                  <InlineFormSection>
-                    <InlineSectionLabel>type</InlineSectionLabel>
-                    <InlineFieldContainer>
-                      <Controller
-                        name={`questions[${questionIndex}].type`}
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            select
-                            fullWidth
-                            variant="outlined"
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                borderRadius: "4px",
-                              },
-                              "& .MuiSelect-select": {
-                                padding: "10px 14px",
-                              },
-                            }}
-                          >
-                            <MenuItem value="Single">Single Choice</MenuItem>
-                            <MenuItem value="Multiple">
-                              Multiple Choice
-                            </MenuItem>
-                          </TextField>
-                        )}
-                      />
-                    </InlineFieldContainer>
-                  </InlineFormSection>
-
-                  {/* Options - inline layout for the section label */}
-                  <InlineSectionLabel paddingBottom={true}>options</InlineSectionLabel>
-                  <InlineFieldContainer>
-                    {/* Option Inputs */}
-                    {(watch(`questions[${questionIndex}].options`) || []).map(
-                      (option, optionIndex) => (
-                        <Box
-                          key={`${questionIndex}-${optionIndex}`}
-                          display="flex"
-                          alignItems="center"
-                          mb={1}
-                        >
-                          <OptionLabel>{option.optionKey}</OptionLabel>
-                          <Controller
-                            name={`questions[${questionIndex}].options[${optionIndex}].optionValue`}
-                            control={control}
-                            rules={{ required: "Option text is required" }}
-                            render={({ field, fieldState: { error } }) => (
-                              <OptionInput
-                                {...field}
-                                fullWidth
-                                placeholder="Please input option text"
-                                variant="outlined"
-                                error={!!error}
-                                helperText={error ? error.message : null}
-                              />
-                            )}
-                          />
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              removeOption(questionIndex, optionIndex)
-                            }
-                            sx={{ color: "#666", ml: 1 }}
-                          >
-                            <DeleteIcon  fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      )
-                    )}
-
-                    {/* Add Option Button */}
-                    <AddButton
-                      startIcon={<AddIcon sx={{ fontSize: 18 }} />}
-                      onClick={() => addOption(questionIndex)}
-                      sx={{ mt: 1 }}
-                    >
-                      Add Option
-                    </AddButton>
-                  </InlineFieldContainer>
-                </QuestionContent>
-              )}
-            </QuestionCard>
+            <QuestionItem
+              key={field.fieldId}
+              field={field}
+              questionIndex={questionIndex}
+              watchQuestion={watchAllQuestions[questionIndex]}
+              control={control}
+              expanded={expandedQuestion === questionIndex}
+              toggleQuestion={toggleQuestion}
+              removeQuestion={removeQuestion}
+              addOption={addOption}
+              removeOption={removeOption}
+              watch={watch}
+            />
           ))}
 
           {/* Add Question Button */}
@@ -529,9 +591,9 @@ const DialogModal = ({ open, handleClose, survey, querySurveyList }) => {
         >
           Cancel
         </ActionButton>
-        <SaveButton onClick={handleSaveClick} variant="contained">
+        <SearchButton onClick={handleSaveClick} variant="contained">
           Save
-        </SaveButton>
+        </SearchButton>
       </DialogActions>
     </StyledDialog>
   )

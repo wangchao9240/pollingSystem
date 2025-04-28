@@ -1,114 +1,200 @@
 import {
-  Button,
-  Dialog,
   Paper,
-  TableBody,
-  TableCell,
   TablePagination,
-  TableRow,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Menu,
-  MenuItem,
-  IconButton,
-  Select,
-  InputLabel,
-} from "@mui/material"
-import EditIcon from '@mui/icons-material/Edit';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import EqualizerIcon from '@mui/icons-material/Equalizer';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { useEffect, useState } from "react"
-import DialogModal from "./dialogModal"
-import axiosInstance from "../../axiosConfig"
-import ResultDialog from "./resultDialog"
-import {
-  StyledTableContainer,
-  StyledTable,
-  StyledTableHead,
-  StyledTableRow,
-  ActionButton,
-  SearchContainer,
-  SearchField,
-  StatusSelect,
-  SearchButton,
-  AddButton,
-  SearchInputGroup,
-  SearchButtonGroup,
-} from "../../components/CustomizeComponent"
+} from "@mui/material";
+import { useEffect, useState, useCallback } from "react";
+import DialogModal from "./dialogModal";
+import axiosInstance from "../../axiosConfig";
+import ResultDialog from "./resultDialog";
+import { ActionButton } from "../../components/CustomizeComponent";
+import SearchBar from "./components/SearchBar";
+import ActionMenu from "./components/ActionMenu";
+import DeleteDialog from "./components/DeleteDialog";
+import SurveyTable from "./components/SurveyTable";
 
-import "./index.css"
+import "./index.css";
 
 const initialSurvey = {
   title: "",
   surveyStatus: 0,
   questions: [],
-}
+};
 
 const SurveyList = () => {
-  const [surveyList, setSurveyList] = useState([])
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [total, setTotal] = useState(0)
-  const [openDialog, setOpenDialog] = useState(false)
-  const [surveyItem, setSurveyItem] = useState({})
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
-  const [openResultDialog, setOpenResultDialog] = useState(false)
+  const [surveyList, setSurveyList] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [surveyItem, setSurveyItem] = useState({});
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openResultDialog, setOpenResultDialog] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const handleMenuOpen = (event, row) => {
+  // Use a single state object to manage all query conditions
+  const [searchParams, setSearchParams] = useState({
+    title: '',
+    status: '',
+    date: ''
+  });
+
+  // Add form input state separate from search params
+  const [formInputs, setFormInputs] = useState({
+    title: '',
+    status: '',
+    date: ''
+  });
+
+  // Use useCallback to optimize function dependencies
+  const querySurveyList = useCallback(async () => {
+    try {
+      // Basic pagination parameters
+      const params = { 
+        page: page + 1, 
+        pageSize: rowsPerPage 
+      };
+      
+      // Use object destructuring and filtering to simplify condition addition
+      const { title, status, date } = searchParams;
+      
+      if (title) params.title = title;
+      if (status !== '') params.status = status;
+      if (date) params.date = date;
+      
+      const { code, data, message } = await axiosInstance.get(
+        "/api/survey/surveyList",
+        { params }
+      );
+      
+      if (code !== 200) {
+        window.$toast(message, "info", 2000);
+        return;
+      }
+      
+      setSurveyList(data.surveyList);
+      setTotal(data.total);
+    } catch (error) {
+      window.$toast(`Server Error: ${error}`, "info", 2000);
+    }
+  }, [page, rowsPerPage, searchParams]);
+
+  // Handle search parameter change function
+  const handleSearchChange = useCallback((field, value) => {
+    setFormInputs(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  // Add function to trigger search with form inputs
+  const handleSearch = useCallback(() => {
+    setSearchParams(formInputs);
+    setPage(0);
+  }, [formInputs]);
+
+  // Reset search conditions
+  const resetSearch = useCallback(() => {
+    const emptyState = {
+      title: '',
+      status: '',
+      date: ''
+    };
+    
+    setFormInputs(emptyState);
+    setSearchParams(emptyState);
+    setPage(0);
+    
+    // No need for setTimeout anymore as we're explicitly triggering the search
+    querySurveyList();
+  }, [querySurveyList]);
+
+  const handleChangePage = useCallback((event, newPage) => {
+    setPage(newPage);
+  }, []);
+
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  }, []);
+
+  const handleDeleteSurvey = useCallback(async () => {
+    try {
+      const { code, message } = await axiosInstance.post(
+        "/api/survey/deleteSurvey",
+        { _id: surveyItem._id }
+      );
+      if (code !== 200) {
+        window.$toast(message, "info", 2000);
+        return;
+      }
+      querySurveyList();
+      setOpenDeleteDialog(false);
+      handleMenuClose();
+      window.$toast("Survey deleted successfully", "success", 2000);
+    } catch (error) {
+      window.$toast(`Server Error: ${error}`, "info", 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [querySurveyList, surveyItem]);
+  
+  const handleCopyLink = useCallback((record) => {
+    try {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/survey?id=${record._id}`
+      );
+      window.$toast("Link copied to clipboard", "success", 2000);
+    } catch (error) {
+      const tempInput = document.createElement("input");
+      tempInput.value = `${window.location.origin}/survey?id=${record._id}`;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      window.$toast("Link copied to clipboard", "success", 2000);
+    }
+    handleMenuClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleMenuOpen = useCallback((event, row) => {
     setAnchorEl(event.currentTarget);
     setSelectedRow(row);
     setSurveyItem(row);
-  };
+  }, []);
 
-  const handleMenuClose = () => {
+  const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    setOpenDialog(false);
+    setSurveyItem(initialSurvey);
+  }, []);
 
   const columns = [
-    { id: "title", label: "Survey Title", minWidth: 200 },
-    { id: "completeCount", label: "Complete Count", minWidth: 150 },
-    {
-      id: "surveyStatus",
-      label: "Status",
-      minWidth: 120,
-      format: (value) => {
-        if (value === 0) return "Inactive"
-        if (value === 1) return "Active"
-        else return "--"
-      },
+    { id: "title", label: "Survey Title", minWidth: 170 },
+    { id: "completeCount", label: "Complete Count", minWidth: 100, align: "center" },
+    { 
+      id: "surveyStatus", 
+      label: "Status", 
+      minWidth: 100,
+      align: "center",
+      format: (value) => (value === 1 ? "Active" : "Inactive"),
     },
     {
       id: "modifyAt",
       label: "modifyAt",
-      minWidth: 100,
-      format: (value) =>
-        new Date(value).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+      minWidth: 170,
+      align: "center",
+      format: (value) => value ? new Date(value).toLocaleString() : '',
     },
     {
       id: "createdAt",
       label: "createdAt",
-      minWidth: 100,
-      format: (value) =>
-        new Date(value).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+      minWidth: 170,
+      align: "center",
+      format: (value) => value ? new Date(value).toLocaleString() : '',
     },
     {
       id: "actions",
@@ -116,163 +202,36 @@ const SurveyList = () => {
       minWidth: 120,
       align: "center",
       format: (value, record) => (
-        <div>
-          <IconButton
-            aria-label="more"
-            onClick={(e) => handleMenuOpen(e, record)}
-            >
-            <ActionButton>Action</ActionButton>
-            {/* <MoreVertIcon /> */}
-          </IconButton>
-        </div>
+        <ActionButton
+          onClick={(e) => handleMenuOpen(e, record)}
+        >
+          Action
+        </ActionButton>
       ),
     },
-  ]
-
-  const querySurveyList = async () => {
-    try {
-      const { code, data, message } = await axiosInstance.get(
-        "/api/survey/surveyList",
-        {
-          params: { page: page + 1, pageSize: rowsPerPage },
-        }
-      )
-      if (code !== 200) {
-        window.$toast(message, "info", 2000)
-        return
-      }
-      setSurveyList(data.surveyList)
-      setTotal(data.total)
-    } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000)
-    }
-  }
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(+event.target.value)
-    setPage(0)
-  }
-
-  const handleDeleteSurvey = async () => {
-    try {
-      const { code, message } = await axiosInstance.post(
-        "/api/survey/deleteSurvey",
-        { _id: surveyItem._id }
-      )
-      if (code !== 200) {
-        window.$toast(message, "info", 2000)
-        return
-      }
-      querySurveyList()
-      setOpenDeleteDialog(false)
-      handleMenuClose();
-      window.$toast("Survey deleted successfully", "success", 2000)
-    } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000)
-    }
-  }
-  
-  const handleCopyLink = (record) => {
-    try {
-      navigator.clipboard.writeText(
-        `${window.location.origin}/survey?id=${record._id}`
-      )
-      window.$toast("Link copied to clipboard", "success", 2000)
-    } catch (error) {
-      const tempInput = document.createElement("input")
-      tempInput.value = `${window.location.origin}/survey?id=${record._id}`
-      document.body.appendChild(tempInput)
-      tempInput.select()
-      document.execCommand("copy")
-      document.body.removeChild(tempInput)
-      window.$toast("Link copied to clipboard", "success", 2000)
-    }
-    handleMenuClose();
-  }
+  ];
 
   useEffect(() => {
-    querySurveyList()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, rowsPerPage])
+    querySurveyList();
+  }, [querySurveyList]);
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
-      <SearchContainer>
-        {/* 左侧三个输入框分组 */}
-        <SearchInputGroup>
-          <SearchField 
-            placeholder="Please input survey title" 
-            size="small"
-          />
-          <StatusSelect size="small">
-            <InputLabel>Please select status</InputLabel>
-            <Select
-              label="Please select status"
-              value=""
-            >
-              <MenuItem value={1}>Active</MenuItem>
-              <MenuItem value={0}>Inactive</MenuItem>
-            </Select>
-          </StatusSelect>
-          <SearchField 
-            placeholder="Please select date" 
-            size="small" 
-            type="date"
-            InputLabelProps={{ shrink: true }}
-          />
-        </SearchInputGroup>
-
-        {/* 右侧两个按钮分组 */}
-        <SearchButtonGroup>
-          <SearchButton variant="contained">Search</SearchButton>
-          <AddButton
-            onClick={() => {
-              setSurveyItem(initialSurvey)
-              setOpenDialog(true)
-            }}
-          >
-            Add
-          </AddButton>
-        </SearchButtonGroup>
-      </SearchContainer>
+      <SearchBar 
+        searchParams={formInputs} // Pass form inputs instead of searchParams
+        handleSearchChange={handleSearchChange}
+        querySurveyList={handleSearch} // Use handleSearch instead of direct querySurveyList
+        resetSearch={resetSearch}
+        openAddDialog={() => {
+          setSurveyItem(initialSurvey);
+          setOpenDialog(true);
+        }}
+      />
       
-      <StyledTableContainer>
-        <StyledTable stickyHeader aria-label="sticky table">
-          <StyledTableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align || "left"}
-                  style={{ minWidth: column.minWidth, width: column.width }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {surveyList.map((row, idx) => {
-              return (
-                <StyledTableRow hover role="checkbox" tabIndex={-1} key={idx}>
-                  {columns.map((column) => {
-                    const value = row[column.id]
-                    return (
-                      <TableCell key={column.id} align={column.align || "left"}>
-                        {column.format ? column.format(value, row) : value}
-                      </TableCell>
-                    )
-                  })}
-                </StyledTableRow>
-              )
-            })}
-          </TableBody>
-        </StyledTable>
-      </StyledTableContainer>
+      <SurveyTable 
+        columns={columns}
+        surveyList={surveyList}
+      />
       
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
@@ -286,82 +245,45 @@ const SurveyList = () => {
         labelRowsPerPage="Rows per page:"
       />
       
-      {/* Action Menu */}
-      <Menu
+      <ActionMenu 
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => {
+        onEdit={() => {
           setOpenDialog(true);
           handleMenuClose();
-        }}>
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Edit
-        </MenuItem>
-        <MenuItem onClick={() => handleCopyLink(selectedRow)}>
-          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-          Copy Link
-        </MenuItem>
-        <MenuItem onClick={() => {
+        }}
+        onCopyLink={() => handleCopyLink(selectedRow)}
+        onViewResult={() => {
           setOpenResultDialog(true);
           handleMenuClose();
-        }}>
-          <EqualizerIcon fontSize="small" sx={{ mr: 1 }} />
-          Result
-        </MenuItem>
-        <MenuItem onClick={() => {
+        }}
+        onDelete={() => {
           setOpenDeleteDialog(true);
           handleMenuClose();
-        }}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
-        </MenuItem>
-      </Menu>
+        }}
+      />
       
       <DialogModal
         querySurveyList={querySurveyList}
         open={openDialog}
-        handleClose={() => {
-          setOpenDialog(false)
-          setSurveyItem(initialSurvey)
-        }}
+        handleClose={handleDialogClose}
         survey={surveyItem}
       />
+      
       <DeleteDialog
         open={openDeleteDialog}
         handleClose={() => setOpenDeleteDialog(false)}
-        handleDelete={() => handleDeleteSurvey()}
+        handleDelete={handleDeleteSurvey}
       />
+      
       <ResultDialog
         open={openResultDialog}
         handleClose={() => setOpenResultDialog(false)}
         survey={surveyItem}
       />
     </Paper>
-  )
-}
+  );
+};
 
-const DeleteDialog = ({ open, handleClose, handleDelete }) => {
-  return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Delete Survey</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Are you sure you want to delete this survey? This action cannot be
-          undone.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
-        <Button onClick={handleDelete} color="primary" autoFocus>
-          Delete
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-export default SurveyList
+export default SurveyList;

@@ -4,3 +4,64 @@
   margin-top: 20px;
   margin-right: 30px;
 }
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+}
+
+.action-menu-item svg {
+  font-size: 20px;
+  color: #666;
+  margin-right: 8px;
+}
+
+.action-menu-item span {
+  font-size: 15px;
+}
+
+/* Ensure placeholder text color */
+input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
+}
+
+/* Ensure date picker text color */
+input[type="date"]::-webkit-datetime-edit {
+  color: #9ca3af;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+/* Change color when value exists */
+input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit {
+  color: #111827;
+}
+
+/* Ensure button styles for different states */
+.MuiButton-contained.search-btn {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.MuiButton-contained.search-btn:hover {
+  background-color: #2563eb;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.MuiButton-contained.reset-btn {
+  background-color: #f1f5f9;
+  color: #111827;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.MuiButton-contained.reset-btn:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}

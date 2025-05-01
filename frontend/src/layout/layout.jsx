@@ -34,7 +34,7 @@ const Layout = ({ children }) => {
   
   // if the current path is /survey, set the client side to true, hide top bar things about login and register
   useEffect(() => {
-    if (currentPath === "/survey" || currentPath === '/surveySuccess') setClientSide(true)
+    if (currentPath === "/survey" || currentPath === '/surveySuccess' || currentPath === '/voting') setClientSide(true)
     else setClientSide(false)
   }, [currentPath])
 

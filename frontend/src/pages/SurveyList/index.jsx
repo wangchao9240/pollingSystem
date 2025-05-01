@@ -115,13 +115,13 @@ const SurveyList = () => {
               try {
                 // Try using clipboard API
                 navigator.clipboard.writeText(
-                  `${window.location.origin}/survey?id=${record._id}`
+                  `${window.location.origin}/voting?id=${record._id}`
                 )
                 window.$toast("Link copied to clipboard", "success", 2000)
               } catch (error) {
                 // Create a fallback using a temporary input element
                 const tempInput = document.createElement("input")
-                tempInput.value = `${window.location.origin}/survey?id=${record._id}`
+                tempInput.value = `${window.location.origin}/voting?id=${record._id}`
                 document.body.appendChild(tempInput)
                 tempInput.select()
                 document.execCommand("copy")

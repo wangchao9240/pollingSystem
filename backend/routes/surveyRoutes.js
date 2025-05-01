@@ -7,6 +7,26 @@ const {
   completeSurvey,
   querySurveyResultByQuestionId
 } = require("../controllers/surveyController")
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { protect } = require("../middleware/authMiddleware")
 const router = express.Router()
 

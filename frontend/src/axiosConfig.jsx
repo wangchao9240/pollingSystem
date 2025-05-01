@@ -2,8 +2,9 @@ import axios from 'axios';
 import utils from './utils';
 
 const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_MODE === 'development' ? 'http://localhost:5001' : 'http://3.26.196.87:5001', // live
+  // baseURL: process.env.REACT_APP_MODE === 'development' ? 'http://localhost:5001' : 'http://3.26.196.87:5001', // live
   // baseURL: 'http://3.26.196.87:5001', // live
+  baseURL: 'http://localhost:5001',
   headers: { 'Content-Type': 'application/json' },
 });
 

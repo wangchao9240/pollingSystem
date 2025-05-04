@@ -72,7 +72,7 @@ import {
         // Initialize answers object
         const initialAnswers = {};
         data.questions.forEach(q => {
-          initialAnswers[q._id] = q.type === "multiple" ? [] : "";
+          initialAnswers[q._id] = q.type === "Multiple" ? [] : "";
         });
         setAnswers(initialAnswers);
         
@@ -127,19 +127,17 @@ import {
     const handleSubmit = async () => {
       // Validate answers
       const unansweredQuestions = questions.filter(q => {
-        if (q.type === "single" && !answers[q._id]) {
+        if (q.type === "Single" && !answers[q._id]) {
           return true;
         }
-        if (q.type === "multiple" && (!answers[q._id] || answers[q._id].length < 2)) {
+        if (q.type === "Multiple" && (!answers[q._id] || answers[q._id].length === 0)) {
           return true;
         }
         return false;
       });
   
       if (unansweredQuestions.length > 0) {
-        const message = unansweredQuestions[0].type === "multiple" 
-          ? "Please select at least two options for multiple choice questions"
-          : "Please answer all questions before submitting";
+        const message = "Please select at least one option for each question";
           
         setSnackbar({
           open: true, 
@@ -233,7 +231,7 @@ import {
                 {index + 1}. {question.question}
               </Typography>
               
-              {question.type === "single" ? (
+              {question.type === "Single" ? (
                 <FormControl component="fieldset" fullWidth>
                   <RadioGroup
                     value={answers[question._id] || ""}

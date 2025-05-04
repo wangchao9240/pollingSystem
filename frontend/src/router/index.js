@@ -7,6 +7,8 @@ import Register from "../pages/Register"
 import Profile from "../pages/Profile"
 import SurveyList from "../pages/SurveyList"
 import Survey from "../pages/Survey"
+import Voting from "../pages/Voting"
+import VotingComplete from "../pages/Voting/VotingComplete.jsx"
 import Success from "../pages/Survey/success.jsx"
 import Layout from "../layout/layout"
 import { useEffect } from "react"
@@ -27,6 +29,8 @@ const AppRouter = () => {
           <Route path="/surveyList" element={<SurveyList />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/surveySuccess" element={<Success />} />
+          <Route path="/voting-complete" element={<VotingComplete />} />
+          <Route path="/voting" element={<Voting />} />
         </Routes>
       </Layout>
     </Router>
@@ -47,6 +51,7 @@ const AuthHandler = () => {
       currentPath !== "/login" &&
       currentPath !== "/register" &&
       currentPath !== "/survey" &&
+      currentPath !== "/voting" &&
       currentPath !== "/surveySuccess"
     ) {
       navigate("/login")

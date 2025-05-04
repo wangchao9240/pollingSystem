@@ -17,6 +17,9 @@ import {
   import { useEffect, useState } from "react";
   import { useSearchParams, useNavigate } from "react-router-dom";
   import axiosInstance from "../../axiosConfig";
+  // import "./voting.css"
+  import Divider from '@mui/material/Divider';
+  import image from './img/image.png';
   
   /**
    * Voting component for the client-side survey page
@@ -130,14 +133,16 @@ import {
         if (q.type === "Single" && !answers[q._id]) {
           return true;
         }
-        if (q.type === "Multiple" && (!answers[q._id] || answers[q._id].length === 0)) {
+        if (q.type === "Multiple" && (!answers[q._id] || answers[q._id].length < 2)) {
           return true;
         }
         return false;
       });
   
       if (unansweredQuestions.length > 0) {
-        const message = "Please select at least one option for each question";
+        const message = unansweredQuestions[0].type === "Multiple" 
+          ? "Please select at least two options for multiple choice questions"
+          : "Please answer all questions before submitting";
           
         setSnackbar({
           open: true, 
@@ -219,81 +224,136 @@ import {
     }
   
     return (
-      <Container maxWidth="md" sx={{ mt: 4, mb: 6 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {survey && survey.title}
-          </Typography>
-          
-          {questions.map((question, index) => (
-            <Box key={question._id} sx={{ mb: 4, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
-              <Typography variant="h6" gutterBottom>
-                {index + 1}. {question.question}
-              </Typography>
-              
-              {question.type === "Single" ? (
-                <FormControl component="fieldset" fullWidth>
-                  <RadioGroup
-                    value={answers[question._id] || ""}
-                    onChange={(e) => handleSingleChoiceChange(question._id, e.target.value)}
-                  >
-                    {question.options.map(option => (
-                      <FormControlLabel
-                        key={option.optionKey}
-                        value={option.optionKey}
-                        control={<Radio />}
-                        label={option.optionValue}
-                      />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-              ) : (
-                <FormControl component="fieldset" fullWidth>
-                  <FormGroup>
-                    {question.options.map(option => (
-                      <FormControlLabel
-                        key={option.optionKey}
-                        control={
-                          <Checkbox
-                            checked={answers[question._id]?.includes(option.optionKey) || false}
-                            onChange={() => handleMultipleChoiceChange(question._id, option.optionKey)}
-                          />
-                        }
-                        label={option.optionValue}
-                      />
-                    ))}
-                  </FormGroup>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-                    Please select at least two options
-                  </Typography>
-                </FormControl>
-              )}
-            </Box>
-          ))}
-          
-          <Button 
-            variant="contained" 
-            color="primary" 
-            size="large" 
-            fullWidth 
-            onClick={handleSubmit}
-            disabled={loading || hasVoted}
-            sx={{ mt: 2 }}
-          >
-            Submit
-          </Button>
-        </Paper>
+      <Box sx={{ 
+        display: 'flex', 
+        height: '100vh', 
+        overflow: 'hidden', 
+        bgcolor: '#f5f7fb', 
+        width: '100%'
+      }}>
+        {/* Left side - Image */}
+        <Box sx={{ 
+          flex: '0 0 40%', 
+          display: { xs: 'none', md: 'flex' }, 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          p: 0
+        }}>
+          <img 
+            src={image} 
+            alt="survey illustration" 
+            style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} 
+          />
+        </Box>
         
-        <Snackbar 
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-        >
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
+        {/* Right side - All questions with scrolling */}
+        <Box sx={{ 
+          flex: '0 0 60%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          p: 3,
+          paddingLeft: { xs: 0, md: 0 },
+          backgroundColor: '#fff'
+        }}>
+          <Paper elevation={1} sx={{ 
+            width: '100%', 
+            // maxWidth: '800px',
+            maxHeight: '100vh',
+            overflow: 'auto',
+            borderRadius: 0,
+            p: 4,
+            backgroundColor: '#ececed'
+          }}>
+            {/* Survey Title */}
+            {survey && (
+              <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 500 }}>
+                {survey.title}
+              </Typography>
+            )}
+            
+            {/* Survey questions */}
+            {questions.map((question, index) => (
+              <Box key={question._id} sx={{ mb: 5 }}>
+                <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Question {index + 1} / {questions.length}
+                </Typography>
+                
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
+                  {question.question}
+                </Typography>
+                
+                {question.type === "Single" ? (
+                  <FormControl component="fieldset" fullWidth>
+                    <RadioGroup
+                      value={answers[question._id] || ""}
+                      onChange={(e) => handleSingleChoiceChange(question._id, e.target.value)}
+                    >
+                      {question.options.map(option => (
+                        <FormControlLabel
+                          key={option.optionKey}
+                          value={option.optionKey}
+                          control={<Radio />}
+                          label={option.optionValue}
+                          sx={{ mb: 1 }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                ) : (
+                  <FormControl component="fieldset" fullWidth>
+                    <FormGroup>
+                      {question.options.map(option => (
+                        <FormControlLabel
+                          key={option.optionKey}
+                          control={
+                            <Checkbox
+                              checked={answers[question._id]?.includes(option.optionKey) || false}
+                              onChange={() => handleMultipleChoiceChange(question._id, option.optionKey)}
+                            />
+                          }
+                          label={option.optionValue}
+                          sx={{ mb: 1 }}
+                        />
+                      ))}
+                    </FormGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                      Please select at least two options
+                    </Typography>
+                  </FormControl>
+                )}
+                
+                {index < questions.length - 1 && <Divider sx={{ mt: 4 }} />}
+              </Box>
+            ))}
+            
+            {/* Navigation buttons */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              size="large" 
+              fullWidth 
+              onClick={handleSubmit}
+              disabled={loading || hasVoted}
+              sx={{ mt: 2 }}
+            >
+              Submit
+            </Button>
+            </Box>
+          </Paper>
+          
+          <Snackbar 
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+          >
+            <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Box>
+      </Box>
     );
   };
   

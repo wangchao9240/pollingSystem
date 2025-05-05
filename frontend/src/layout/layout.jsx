@@ -14,15 +14,17 @@ const Layout = ({ children }) => {
       setCurrentPath(window.location.pathname)
     }
 
+    // Listen for browser back/forward navigation
     window.addEventListener("popstate", handleLocationChange)
-
+    
     return () => {
       window.removeEventListener("popstate", handleLocationChange)
-    }
+          }
   }, [])
 
   useEffect(() => {
-    if (currentPath.startsWith("/survey") || currentPath === '/surveySuccess') {
+    // Check if the path is exactly "/survey" OR exactly "/surveySuccess"
+    if (currentPath === "/survey" || currentPath === '/surveySuccess') { 
       setClientSide(true)
     } else {
       setClientSide(false)

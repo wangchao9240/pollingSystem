@@ -3,6 +3,7 @@ import {
   TablePagination,
 } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation and useNavigate
 import DialogModal from "./dialogModal";
 import axiosInstance from "../../axiosConfig";
 import ResultDialog from "./resultDialog";
@@ -21,6 +22,8 @@ const initialSurvey = {
 };
 
 const SurveyList = () => {
+  const location = useLocation(); // Get location object
+  const navigate = useNavigate(); // Get navigate function
   const [surveyList, setSurveyList] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -32,21 +35,22 @@ const SurveyList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  // Use a single state object to manage all query conditions
+// Use a single state object to manage all query conditions
   const [searchParams, setSearchParams] = useState({
     title: '',
     status: '',
     date: ''
   });
 
-  // Add form input state separate from search params
+// Add form input state separate from search params
+
   const [formInputs, setFormInputs] = useState({
     title: '',
     status: '',
     date: ''
   });
-
-  // Use useCallback to optimize function dependencies
+  
+ // Use useCallback to optimize function dependencies
   const querySurveyList = useCallback(async () => {
     try {
       // Basic pagination parameters
@@ -172,6 +176,12 @@ const SurveyList = () => {
     setSurveyItem(initialSurvey);
   }, []);
 
+  // Function to open the dialog in 'Add survey' mode
+  const handleOpenCreateDialog = useCallback(() => {
+    setSurveyItem(initialSurvey); // Reset survey item for creation
+    setOpenDialog(true);
+  }, []);
+
   const columns = [
     { id: "title", label: "Survey Title", minWidth: 170 },
     { id: "completeCount", label: "Complete Count", minWidth: 100, align: "center" },
@@ -217,6 +227,16 @@ const SurveyList = () => {
     querySurveyList();
   }, [querySurveyList]);
 
+  // Effect to check location state and open dialog if needed
+  useEffect(() => {
+    if (location.state?.openCreateDialog) {
+      handleOpenCreateDialog();
+      // Clear the state to prevent re-opening on refresh or back navigation
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, handleOpenCreateDialog, navigate]); // Add dependencies
+
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
       <SearchBar 
@@ -224,10 +244,7 @@ const SurveyList = () => {
         handleSearchChange={handleSearchChange}
         querySurveyList={handleSearch} // Use handleSearch instead of direct querySurveyList
         resetSearch={resetSearch}
-        openAddDialog={() => {
-          setSurveyItem(initialSurvey);
-          setOpenDialog(true);
-        }}
+        openAddDialog={handleOpenCreateDialog} // Use the new handler here
       />
       
       <SurveyTable 

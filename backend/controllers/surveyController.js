@@ -240,6 +240,27 @@ const querySurveyResultByQuestionId = async (req, res) => {
   }
 }
 
+// Function to get survey statistics: retrieve number of total surveys, active surveys, and total responses
+const getSurveyStats = async (req, res) => {
+  try {
+    const totalSurveys = await Survey.countDocuments();
+    const activeSurveys = await Survey.countDocuments({ surveyStatus: 1 });
+    const totalResponses = await SurveyResult.countDocuments(); 
+
+    res.json({
+      code: 200,
+      data: {
+        totalSurveys,
+        activeSurveys,
+        totalResponses,
+      },
+      message: "Stats fetched successfully",
+    });
+  } catch (error) {
+    res.json({ code: 500, data: null, message: error.message });
+  }
+};
+
 module.exports = {
   querySurveyItemById,
   querySurvey,
@@ -247,4 +268,5 @@ module.exports = {
   addOrUpdateSurvey,
   completeSurvey,
   querySurveyResultByQuestionId,
+  getSurveyStats,
 }

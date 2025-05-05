@@ -145,12 +145,12 @@ const SurveyList = () => {
   const handleCopyLink = useCallback((record) => {
     try {
       navigator.clipboard.writeText(
-        `${window.location.origin}/survey?id=${record._id}`
+        `${window.location.origin}/voting?id=${record._id}`
       );
       window.$toast("Link copied to clipboard", "success", 2000);
     } catch (error) {
       const tempInput = document.createElement("input");
-      tempInput.value = `${window.location.origin}/survey?id=${record._id}`;
+      tempInput.value = `${window.location.origin}/voting?id=${record._id}`;
       document.body.appendChild(tempInput);
       tempInput.select();
       document.execCommand("copy");

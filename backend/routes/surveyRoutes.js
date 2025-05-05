@@ -8,6 +8,26 @@ const {
   querySurveyResultByQuestionId,
   getSurveyStats, // Import new function to get survey statistics
 } = require("../controllers/surveyController")
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { protect } = require("../middleware/authMiddleware")
 const router = express.Router()
 

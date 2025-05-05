@@ -84,20 +84,40 @@ const updateUserProfile = async (req, res) => {
     if (!user)
       return res.json({ code: 404, data: null, message: "User not found" })
 
-    const { name, email, university, address } = req.body
+    const { name, email, currentPassword, newPassword } = req.body
+
     user.name = name || user.name
     user.email = email || user.email
-    user.university = university || user.university
-    user.address = address || user.address
+
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password)
+      if (!isMatch) {
+        return res.json({
+          code: 401,
+          data: null,
+          message: "Current password incorrect. Please try again.",
+        })
+      }
+      user.password = await bcrypt.hash(newPassword, 10)
+    } else if (currentPassword || newPassword) {
+      return res.json({
+        code: 400,
+        data: null,
+        message: "Both current and new password are required to change password.",
+      })
+    }
 
     const updatedUser = await user.save()
+
     res.json({
-      id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      university: updatedUser.university,
-      address: updatedUser.address,
-      token: generateToken(updatedUser.id),
+      code: 200,
+      data: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        token: generateToken(updatedUser.id),
+      },
+      message: "Profile updated successfully.",
     })
   } catch (error) {
     res.json({ code: 500, data: null, message: error.message })

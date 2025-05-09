@@ -24,7 +24,7 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     // Check if the path is exactly "/survey" OR exactly "/surveySuccess"
-    if (currentPath === "/survey" || currentPath === '/surveySuccess') { 
+    if (currentPath === "/survey" || currentPath === '/surveySuccess' || currentPath === '/voting') { 
       setClientSide(true)
     } else {
       setClientSide(false)

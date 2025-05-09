@@ -1,78 +1,20 @@
-<!-- # **Assignment: Full-Stack CRUD Application Development with DevOps Practices**
-
-## **Objective**
-
-You have been provided with a starter project that includes user authentication using  **Node.js, React.js, and MongoDB**. Your task is to extend this application by implementing **CRUD (Create, Read, Update, Delete) operations** for a real-world application of your choice, while following industry best practices such as:
-
-* **Project Management with JIRA**
-* **Requirement Diagram using SysML**
-* **Version Control using GitHub**
-* **CI/CD Integration for Automated Deployment**
-
-## **Requirements**
-
-### **1. Choose a Real-World Application**
-
-Select a meaningful use case for your CRUD operations. We will provide the list, you have to select it.
-
-### **2. Project Management with JIRA and SysML**
-
-* Create a **JIRA project** and define:
-  * **Epic**
-  * **User Stories** (features required in your app)
-  * **Child issues & Subtasks** (breaking down development work)
-  * **Sprint Planning** (organizing work into milestones)
-* Document your JIRA **board URL** in the project README.
-* Draw a requirements diagram
-
-### **3. Backend Development (Node.js + Express + MongoDB)**
-
-* Create a user-friendly interface to interact with your API (Some portion developed, follow task manager app)).
-* Implement **forms** for adding and updating records.
-* Display data using  **tables, cards, or lists (Follow how we showed data in task manager app)**
-
-### **4. Frontend Development (React.js)**
-
-* Create a user-friendly interface to interact with your API (**Some portion developed, follow task manager app)**.
-* Implement **forms** for adding, showing, deleting and updating records (CRUD).
-* Display data using  **tables, cards, or lists (Follow how we showed data in task manager app)**
-
-### **5. Authentication & Authorization**
-
-* Ensure **only authenticated users** can access and perform CRUD operations. (Already developed in your project)
-* Use **JWT (JSON Web Tokens)** for user authentication (Use the task manager one from .env file).
-
-### **6. GitHub Version Control & Branching Strategy**
-
-* Use **GitHub for version control** and maintain:
-  * `main` branch (stable production-ready code)
-  * Feature branches (`feature/xyz`) for each new functionality
-* Follow proper **commit messages** and  **pull request (PR) reviews** .
-
-### **7. CI/CD Pipeline Setup**
-
-* Implement a **CI/CD pipeline using GitHub Actions** to:
-  * Automatically **run tests** on every commit/pull request (Optional).
-  * Deploy the **backend** to **AWS** .
-  * Deploy the **frontend** to **AWS**.
-* Document your  **CI/CD workflow in the README** .
-
-## **Submission Requirements**
-
-* **JIRA Project Board URL** (user stories ).
-* **Requirment diagram** (Using project features)
-* **GitHub Repository** (`backend/` and `frontend/`).
-* **README.md** with:
-
-  * Project setup instructions.
-  * CI/CD pipeline details. -->
-  
-# **Assignment: Online Polling System**
+# **Online Voting & Survey System**
 
 ## Student Number: 12192856
 ## Student Name: Chasen Wang
 
-## **Project Setup Instructions**
+A comprehensive web application for creating, managing, and collecting responses to surveys and polls. Built with the MERN stack (MongoDB, Express, React, Node.js).
+
+## 📋 Features
+
+- **User Authentication**: Secure login and registration system
+- **Survey Management**: Create, edit, activate/deactivate, and delete surveys
+- **Question Types**: Support for single-choice (radio) and multiple-choice (checkbox) questions
+- **Public Voting**: Share surveys via unique links for public participation
+- **Results Dashboard**: Visualize survey results with interactive charts
+- **Mobile Responsive**: Optimized for both desktop and mobile devices
+
+## 🚀 Project Setup Instructions
 
 ### **Backend Setup**
 1. Navigate to the `backend` directory:
@@ -83,16 +25,25 @@ Select a meaningful use case for your CRUD operations. We will provide the list,
    ```bash
    yarn install
    ```
+   or
+   ```bash
+   npm install
+   ```
 3. Create a `.env` file in the `backend` directory with the following variables:
    ```
    MONGO_URI=<your-mongodb-uri>
    JWT_SECRET=<your-jwt-secret>
-   PORT=<backend-port>
+   PORT=5000
    ```
 4. Start the backend server:
    ```bash
    yarn start
    ```
+   or
+   ```bash
+   npm start
+   ```
+   The server will run on http://localhost:5000
 
 ### **Frontend Setup**
 1. Navigate to the `frontend` directory:
@@ -103,18 +54,87 @@ Select a meaningful use case for your CRUD operations. We will provide the list,
    ```bash
    yarn install
    ```
+   or
+   ```bash
+   npm install
+   ```
 3. Start the frontend development server:
    ```bash
    yarn start
    ```
+   or
+   ```bash
+   npm start
+   ```
+   The application will open in your default browser at http://localhost:3000
 
-### **Running the Application**
-1. Ensure both the backend and frontend servers are running.
-2. Access the application in your browser at `http://localhost:<frontend-port>`.
+### **Production Build**
+1. Build the frontend:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+2. The build files can be served using the Express backend or a dedicated static file server.
 
----
+## 📁 Project Structure
 
-## **CI/CD Pipeline Details**
+```
+sdlapps/
+├── backend/              # Node.js/Express server
+│   ├── controllers/      # Request handlers
+│   ├── models/           # MongoDB models
+│   ├── routes/           # API routes
+│   └── middleware/       # Custom middleware
+└── frontend/             # React application
+    ├── public/           # Static files
+    └── src/              # Source files
+        ├── components/   # Reusable UI components
+        ├── pages/        # Page components
+        ├── services/     # API services
+        ├── context/      # React context providers
+        ├── utils/        # Utility functions
+        └── App.js        # Main application component
+```
+
+## 📱 Key Features & Usage
+
+### Creating a Survey
+1. Login to your account
+2. Navigate to the "New Survey" page
+3. Enter the survey title and description
+4. Add questions and response options
+5. Click "Save" to create your survey
+
+### Managing Surveys
+- View all your surveys on the dashboard
+- Activate/deactivate surveys to control availability
+- Edit surveys to modify questions or options
+- Delete surveys that are no longer needed
+
+### Collecting Responses
+- Share your survey's unique URL with participants
+- View real-time statistics as responses come in
+- Analyze results with visualized charts and graphs
+
+## 🧪 Testing
+
+Run tests with:
+```bash
+cd frontend
+npm test
+```
+
+This launches the test runner in interactive watch mode. The project uses Jest and React Testing Library for unit and integration tests.
+
+## 🔧 Technologies
+
+- **Frontend**: React, Material UI, eCharts
+- **Backend**: Node.js, Express
+- **Database**: MongoDB
+- **Authentication**: JWT (JSON Web Tokens)
+- **Deployment**: AWS CI/CD pipeline
+
+## 📖 CI/CD Pipeline Details
 
 ### **CI/CD Workflow**
 The CI/CD pipeline is configured using **GitHub Actions**. Below are the key steps:
@@ -126,7 +146,7 @@ The CI/CD pipeline is configured using **GitHub Actions**. Below are the key ste
    - The pipeline installs dependencies for the backend.
    - It deploys the backend to **AWS**.
 
-3. **Frontend CI** (Optional):
+3. **Frontend CI**:
    - The pipeline installs dependencies for the frontend.
    - It deploys the frontend to **AWS**.
 
@@ -140,5 +160,15 @@ The following secrets are configured in the GitHub repository:
 - The backend and frontend are deployed to AWS using the CI/CD pipeline.
 - Ensure AWS credentials are configured in the GitHub repository for deployment.
 
-For more details, refer to the `.github/workflows/ci.yml` file.
+For more details, refer to the ci.yml file.
 
+## 📚 Additional Resources
+
+- [React Documentation](https://reactjs.org/)
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [Express Documentation](https://expressjs.com/)
+- [Material UI Documentation](https://mui.com/)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -1,8 +1,5 @@
 # **Online Voting & Survey System**
 
-## Student Number: 12192856
-## Student Name: Chasen Wang
-
 A comprehensive web application for creating, managing, and collecting responses to surveys and polls. Built with the MERN stack (MongoDB, Express, React, Node.js).
 
 ## 📋 Features

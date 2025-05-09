@@ -20,4 +20,10 @@ router.post("/submit", votingController.submitVoting);
  */
 router.get("/status/:id", votingController.checkVotingStatus);
 
+/**
+ * Get results for a survey
+ * @route GET /api/voting/results/:id
+ */
+router.get("/results/:id", votingController.getSurveyResults);
+
 module.exports = router;

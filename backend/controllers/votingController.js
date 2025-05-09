@@ -115,10 +115,10 @@ const submitVoting = async (req, res) => {
         });
       }
       
-      // Save result - Using existing SurveyResult schema
-      // Note: In your model, questionId references the Survey model, not Question
+      // Save result with updated schema (both surveyId and questionId)
       const result = new SurveyResult({
-        questionId: id, // Using survey ID as questionId to match your schema
+        surveyId: id,           // Store survey ID
+        questionId: questionId,  // Store actual question ID
         chooseAnswer
       });
       
@@ -179,8 +179,71 @@ const checkVotingStatus = async (req, res) => {
   }
 };
 
+/**
+ * Get survey results by survey ID
+ * @param {Object} req - Request object containing survey ID
+ * @param {Object} res - Response object
+ */
+const getSurveyResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find survey
+    const survey = await Survey.findById(id);
+    if (!survey) {
+      return res.json({ 
+        code: 404, 
+        data: null, 
+        message: "Survey not found" 
+      });
+    }
+    
+    // Get all results for this survey, with question details
+    const results = await SurveyResult.find({ surveyId: id })
+      .populate('questionId')
+      .exec();
+    
+    // Group results by question
+    const questionResults = {};
+    
+    results.forEach(result => {
+      const questionId = result.questionId._id.toString();
+      if (!questionResults[questionId]) {
+        questionResults[questionId] = {
+          question: result.questionId.question,
+          type: result.questionId.type,
+          options: result.questionId.options,
+          answers: {}
+        };
+      }
+      
+      // Count answers for each option
+      result.chooseAnswer.forEach(answer => {
+        questionResults[questionId].answers[answer] = 
+          (questionResults[questionId].answers[answer] || 0) + 1;
+      });
+    });
+    
+    res.json({
+      code: 200,
+      data: {
+        survey,
+        results: questionResults
+      },
+      message: "Survey results retrieved successfully"
+    });
+  } catch (error) {
+    res.json({ 
+      code: 500, 
+      data: null, 
+      message: `Server error: ${error.message}` 
+    });
+  }
+};
+
 module.exports = {
   getSurveyForVoting,
   submitVoting,
-  checkVotingStatus
+  checkVotingStatus,
+  getSurveyResults
 };

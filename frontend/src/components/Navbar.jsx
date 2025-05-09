@@ -2,11 +2,9 @@ import { Link, useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 
-import { Menu as MenuIcon, MenuOpen as MenuOpenIcon } from "@mui/icons-material"
-
 import "./Navbar.css"
 
-const Navbar = (props) => {
+const Navbar = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -17,31 +15,37 @@ const Navbar = (props) => {
   }
 
   return (
-    <nav style={{ position: 'relative' }} className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      { user?.token && (
-        <div className="menu-icon-wrapper">
-          {props.menuStatus ? <MenuOpenIcon onClick={props.handleMenu} /> : <MenuIcon onClick={props.handleMenu} />}
-        </div>
-      ) }
-      <Link to="/" className={"text-2xl font-bold"} style={{ marginLeft: user?.token ? '30px' : '0' }}>
-        Online Polling System
-      </Link>
+    <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
+
+      <div className="flex items-center space-x-4">
+        <Link to="/" className={"text-2xl font-bold"}>
+          Online Polling System
+        </Link>
+        {user && (
+          <span className="ml-25 font-semibold italic text-lg mt-0.5">
+            Hello, {user.name}
+          </span>
+        )}
+      </div>
       <div>
         {user ? (
           <>
-            <Link to="/profile" className="mr-4">
-              Hello, {user.name}
+            <Link to="/surveyList" className="mr-4 hover:text-gray-300">
+              Surveys
+            </Link>
+            <Link to="/profile" className="mr-4 hover:text-gray-300">
+              Profile
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
+              className="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600"
             >
               Logout
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" className="mr-4">
+            <Link to="/login" className="mr-4 hover:text-gray-300">
               Login
             </Link>
             <Link

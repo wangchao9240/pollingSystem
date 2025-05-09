@@ -1,255 +1,257 @@
 import {
-  Button,
-  Dialog,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
   TablePagination,
-  TableRow,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material"
-import { useEffect, useState } from "react"
-import DialogModal from "./dialogModal"
-import axiosInstance from "../../axiosConfig"
-import ResultDialog from "./resultDialog"
+} from "@mui/material";
+import { useEffect, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation and useNavigate
+import DialogModal from "./dialogModal";
+import axiosInstance from "../../axiosConfig";
+import ResultDialog from "./resultDialog";
+import { ActionButton } from "../../components/CustomizeComponent";
+import SearchBar from "./components/SearchBar";
+import ActionMenu from "./components/ActionMenu";
+import DeleteDialog from "./components/DeleteDialog";
+import SurveyTable from "./components/SurveyTable";
 
-import "./index.css"
-// import { format } from "echarts"
+import "./index.css";
 
 const initialSurvey = {
   title: "",
   surveyStatus: 0,
   questions: [],
-}
+};
 
 const SurveyList = () => {
-  const [surveyList, setSurveyList] = useState([])
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [total, setTotal] = useState(0)
-  const [openDialog, setOpenDialog] = useState(false)
-  const [surveyItem, setSurveyItem] = useState({})
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
-  const [openResultDialog, setOpenResultDialog] = useState(false)
+  const location = useLocation(); // Get location object
+  const navigate = useNavigate(); // Get navigate function
+  const [surveyList, setSurveyList] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [surveyItem, setSurveyItem] = useState({});
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openResultDialog, setOpenResultDialog] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
 
-  const columns = [
-    { id: "title", label: "SurveyTitle", minWidth: 120 },
-    { id: "completeCount", label: "Complete Count", minWidth: 100 },
-    {
-      id: "surveyStatus",
-      label: "Status",
-      minWidth: 100,
-      format: (value) => {
-        if (value === 0) return "Inactive"
-        if (value === 1) return "Active"
-        else return "--"
-      },
-    },
-    {
-      id: "createdAt",
-      label: "Created At",
-      minWidth: 100,
-      format: (value) =>
-        new Date(value).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-    },
-    {
-      id: "modifyAt",
-      label: "Modify At",
-      minWidth: 100,
-      format: (value) =>
-        new Date(value).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-    },
-    {
-      id: "actions",
-      label: "Actions",
-      width: 220,
-      align: "right",
-      format: (value, record) => (
-        <div>
-          <Button
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenDialog(true)
-            }}
-            variant="outlined"
-            size="small"
-            color="primary"
-          >
-            Edit
-          </Button>
-          <Button
-            style={{ marginLeft: "8px" }}
-            variant="outlined"
-            size="small"
-            color="primary"
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenDeleteDialog(true)
-            }}
-          >
-            Delete
-          </Button>
-          <Button
-            style={{ marginTop: "10px" }}
-            onClick={() => {
-              try {
-                // Try using clipboard API
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/voting?id=${record._id}`
-                )
-                window.$toast("Link copied to clipboard", "success", 2000)
-              } catch (error) {
-                // Create a fallback using a temporary input element
-                const tempInput = document.createElement("input")
-                tempInput.value = `${window.location.origin}/voting?id=${record._id}`
-                document.body.appendChild(tempInput)
-                tempInput.select()
-                document.execCommand("copy")
-                document.body.removeChild(tempInput)
-                window.$toast("Link copied to clipboard", "success", 2000)
-              }
-              setSurveyItem(record)
-            }}
-            variant="outlined"
-            size="small"
-            color="primary"
-          >
-            Copy Link
-          </Button>
-          <Button
-            style={{ marginLeft: "8px", marginTop: "10px" }}
-            variant="outlined"
-            size="small"
-            color="primary"
-            onClick={() => {
-              setSurveyItem(record)
-              setOpenResultDialog(true)
-            }}
-          >
-            Result
-          </Button>
-        </div>
-      ),
-    },
-  ]
+// Use a single state object to manage all query conditions
+  const [searchParams, setSearchParams] = useState({
+    title: '',
+    status: '',
+    date: ''
+  });
 
-  const querySurveyList = async () => {
-    // fetch survey list
+// Add form input state separate from search params
+
+  const [formInputs, setFormInputs] = useState({
+    title: '',
+    status: '',
+    date: ''
+  });
+  
+ // Use useCallback to optimize function dependencies
+  const querySurveyList = useCallback(async () => {
     try {
+      // Basic pagination parameters
+      const params = { 
+        page: page + 1, 
+        pageSize: rowsPerPage 
+      };
+      
+      // Use object destructuring and filtering to simplify condition addition
+      const { title, status, date } = searchParams;
+      
+      if (title) params.title = title;
+      if (status !== '') params.status = status;
+      if (date) params.date = date;
+      
       const { code, data, message } = await axiosInstance.get(
         "/api/survey/surveyList",
-        {
-          params: { page: page + 1, pageSize: rowsPerPage },
-        }
-      )
+        { params }
+      );
+      
       if (code !== 200) {
-        window.$toast(message, "info", 2000)
-        return
+        window.$toast(message, "info", 2000);
+        return;
       }
-      setSurveyList(data.surveyList)
-      setTotal(data.total)
+      
+      setSurveyList(data.surveyList);
+      setTotal(data.total);
     } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000);
     }
-  }
+  }, [page, rowsPerPage, searchParams]);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
+  // Handle search parameter change function
+  const handleSearchChange = useCallback((field, value) => {
+    setFormInputs(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(+event.target.value)
-    setPage(0)
-  }
+  // Add function to trigger search with form inputs
+  const handleSearch = useCallback(() => {
+    setSearchParams(formInputs);
+    setPage(0);
+  }, [formInputs]);
 
-  const handleDeleteSurvey = async () => {
+  // Reset search conditions
+  const resetSearch = useCallback(() => {
+    const emptyState = {
+      title: '',
+      status: '',
+      date: ''
+    };
+    
+    setFormInputs(emptyState);
+    setSearchParams(emptyState);
+    setPage(0);
+    
+    // No need for setTimeout anymore as we're explicitly triggering the search
+    querySurveyList();
+  }, [querySurveyList]);
+
+  const handleChangePage = useCallback((event, newPage) => {
+    setPage(newPage);
+  }, []);
+
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  }, []);
+
+  const handleDeleteSurvey = useCallback(async () => {
     try {
       const { code, message } = await axiosInstance.post(
         "/api/survey/deleteSurvey",
         { _id: surveyItem._id }
-      )
+      );
       if (code !== 200) {
-        window.$toast(message, "info", 2000)
-        return
+        window.$toast(message, "info", 2000);
+        return;
       }
-      querySurveyList()
-      setOpenDeleteDialog(false)
-      window.$toast("Survey deleted successfully", "success", 2000)
+      querySurveyList();
+      setOpenDeleteDialog(false);
+      handleMenuClose();
+      window.$toast("Survey deleted successfully", "success", 2000);
     } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000)
+      window.$toast(`Server Error: ${error}`, "info", 2000);
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [querySurveyList, surveyItem]);
+  
+  const handleCopyLink = useCallback((record) => {
+    try {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/voting?id=${record._id}`
+      );
+      window.$toast("Link copied to clipboard", "success", 2000);
+    } catch (error) {
+      const tempInput = document.createElement("input");
+      tempInput.value = `${window.location.origin}/voting?id=${record._id}`;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      window.$toast("Link copied to clipboard", "success", 2000);
+    }
+    handleMenuClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleMenuOpen = useCallback((event, row) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRow(row);
+    setSurveyItem(row);
+  }, []);
+
+  const handleMenuClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    setOpenDialog(false);
+    setSurveyItem(initialSurvey);
+  }, []);
+
+  // Function to open the dialog in 'Add survey' mode
+  const handleOpenCreateDialog = useCallback(() => {
+    setSurveyItem(initialSurvey); // Reset survey item for creation
+    setOpenDialog(true);
+  }, []);
+
+  const columns = [
+    { id: "title", label: "Survey Title", minWidth: 170 },
+    { id: "completeCount", label: "Complete Count", minWidth: 100, align: "center" },
+    { 
+      id: "surveyStatus", 
+      label: "Status", 
+      minWidth: 100,
+      align: "center",
+      format: (value) => (value === 1 ? "Active" : "Inactive"),
+    },
+    {
+      id: "modifyAt",
+      label: "modifyAt",
+      minWidth: 170,
+      align: "center",
+      format: (value) => value ? new Date(value).toLocaleString() : '',
+    },
+    {
+      id: "createdAt",
+      label: "createdAt",
+      minWidth: 170,
+      align: "center",
+      format: (value) => value ? new Date(value).toLocaleString() : '',
+    },
+    {
+      id: "actions",
+      label: "Action",
+      minWidth: 120,
+      align: "center",
+      format: (value, record) => (
+        <ActionButton
+          onClick={(e) => handleMenuOpen(e, record)}
+          variant="outlined"
+          size="small"
+        >
+          Action
+        </ActionButton>
+      ),
+    },
+  ];
 
   useEffect(() => {
-    querySurveyList()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, rowsPerPage])
+    querySurveyList();
+  }, [querySurveyList]);
+
+  // Effect to check location state and open dialog if needed
+  useEffect(() => {
+    if (location.state?.openCreateDialog) {
+      handleOpenCreateDialog();
+      // Clear the state to prevent re-opening on refresh or back navigation
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, handleOpenCreateDialog, navigate]); // Add dependencies
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <div className="button-wrapper">
-        <Button
-          variant="contained"
-          onClick={() => {
-            setSurveyItem(initialSurvey)
-            setOpenDialog(true)
-          }}
-        >
-          Add
-        </Button>
-      </div>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="sticky table">
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  style={{ minWidth: column.minWidth, width: column.width }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {surveyList.map((row, idx) => {
-              return (
-                <TableRow hover role="checkbox" tabIndex={-1} key={idx}>
-                  {columns.map((column) => {
-                    const value = row[column.id]
-                    return (
-                      <TableCell key={column.id} align={column.align}>
-                        {column.format ? column.format(value, row) : value}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+    <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
+      <SearchBar 
+        searchParams={formInputs} // Pass form inputs instead of searchParams
+        handleSearchChange={handleSearchChange}
+        querySurveyList={handleSearch} // Use handleSearch instead of direct querySurveyList
+        resetSearch={resetSearch}
+        openAddDialog={handleOpenCreateDialog} // Use the new handler here
+      />
+      
+      <SurveyTable 
+        columns={columns}
+        surveyList={surveyList}
+      />
+      
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
@@ -258,50 +260,49 @@ const SurveyList = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
+        labelRowsPerPage="Rows per page:"
       />
+      
+      <ActionMenu 
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        onEdit={() => {
+          setOpenDialog(true);
+          handleMenuClose();
+        }}
+        onCopyLink={() => handleCopyLink(selectedRow)}
+        onViewResult={() => {
+          setOpenResultDialog(true);
+          handleMenuClose();
+        }}
+        onDelete={() => {
+          setOpenDeleteDialog(true);
+          handleMenuClose();
+        }}
+      />
+      
       <DialogModal
         querySurveyList={querySurveyList}
         open={openDialog}
-        handleClose={() => {
-          setOpenDialog(false)
-          setSurveyItem(initialSurvey)
-        }}
+        handleClose={handleDialogClose}
         survey={surveyItem}
       />
+      
       <DeleteDialog
         open={openDeleteDialog}
         handleClose={() => setOpenDeleteDialog(false)}
-        handleDelete={() => handleDeleteSurvey()}
+        handleDelete={handleDeleteSurvey}
       />
+      
       <ResultDialog
         open={openResultDialog}
         handleClose={() => setOpenResultDialog(false)}
         survey={surveyItem}
       />
     </Paper>
-  )
-}
+  );
+};
 
-const DeleteDialog = ({ open, handleClose, handleDelete }) => {
-  return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Delete Survey</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Are you sure you want to delete this survey? This action cannot be
-          undone.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
-        <Button onClick={handleDelete} color="primary" autoFocus>
-          Delete
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-export default SurveyList
+export default SurveyList;

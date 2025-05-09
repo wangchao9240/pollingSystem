@@ -22,15 +22,50 @@ const querySurveyItemById = async (req, res) => {
 
 const querySurvey = async (req, res) => {
   try {
-    const { page = 1, pageSize = 10 } = req.query
+    const { page = 1, pageSize = 10, title, status, date } = req.query
     const skip = (page - 1) * pageSize
-    const surveys = await Survey.find()
+    
+    // Build query conditions
+    const queryCondition = {}
+    
+    // If there's a title filter condition, add fuzzy query
+    if (title) {
+      queryCondition.title = { $regex: title, $options: 'i' } // Case insensitive
+    }
+    
+    // If there's a status filter condition
+    if (status !== undefined && status !== '') {
+      queryCondition.surveyStatus = parseInt(status)
+    }
+    
+    // If there's a date filter condition
+    if (date) {
+      // Convert date string to Date object, and set to the beginning of the day
+      const startDate = new Date(date)
+      startDate.setHours(0, 0, 0, 0)
+      
+      // End of the day
+      const endDate = new Date(date)
+      endDate.setHours(23, 59, 59, 999)
+      
+      // Query data modified on that day
+      queryCondition.modifyAt = { 
+        $gte: startDate, 
+        $lte: endDate
+      }
+    }
+    
+    // Query and sort by modification time in descending order
+    const surveys = await Survey.find(queryCondition)
+      .sort({ modifyAt: -1 }) // -1 means descending order
       .skip(skip)
       .limit(parseInt(pageSize))
       .populate({
         path: "questions"
       })
-    const total = await Survey.countDocuments()
+    
+    // Get the total count that meets the conditions
+    const total = await Survey.countDocuments(queryCondition)
 
     res.json({
       code: 200,
@@ -205,6 +240,27 @@ const querySurveyResultByQuestionId = async (req, res) => {
   }
 }
 
+// Function to get survey statistics: retrieve number of total surveys, active surveys, and total responses
+const getSurveyStats = async (req, res) => {
+  try {
+    const totalSurveys = await Survey.countDocuments();
+    const activeSurveys = await Survey.countDocuments({ surveyStatus: 1 });
+    const totalResponses = await SurveyResult.countDocuments(); 
+
+    res.json({
+      code: 200,
+      data: {
+        totalSurveys,
+        activeSurveys,
+        totalResponses,
+      },
+      message: "Stats fetched successfully",
+    });
+  } catch (error) {
+    res.json({ code: 500, data: null, message: error.message });
+  }
+};
+
 module.exports = {
   querySurveyItemById,
   querySurvey,
@@ -212,4 +268,5 @@ module.exports = {
   addOrUpdateSurvey,
   completeSurvey,
   querySurveyResultByQuestionId,
+  getSurveyStats,
 }

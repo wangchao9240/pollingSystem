@@ -1,107 +1,254 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '../store/authSlice';
 import axiosInstance from '../axiosConfig';
-import { useAlert } from '../context/AlertContext';
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Alert,
+  IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Profile = () => {
-  const { showAlert } = useAlert();
-  const { user } = useAuth(); // Access user token from context
+  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    university: '',
-    address: '',
+    currentPassword: '',
+    newPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('success');
 
   useEffect(() => {
-    // Fetch profile data from the backend
     const fetchProfile = async () => {
+      if (!user?.token) {
+        setAlertMessage('User data not available.');
+        setAlertType('warning');
+        return;
+      }
       setLoading(true);
+      setAlertMessage('');
       try {
-        const { code, data, message } = await axiosInstance.get('/api/auth/profile', {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        const { code, data, message } = await axiosInstance.get('/api/auth/profile');
         if (code !== 200) {
-          window.$toast(message, 'info', 2000);
+          setAlertMessage(message || 'Failed to fetch profile.');
+          setAlertType('warning');
           return;
         }
-        setFormData({
+        setFormData((prev) => ({
+          ...prev,
           name: data.name,
           email: data.email,
-          university: data.university || '',
-          address: data.address || '',
-        });
+        }));
       } catch (error) {
-        window.$toast(`Server Error: ${error}`, 'info', 2000);
+        setAlertMessage(`Server Error: ${error.message || error}`);
+        setAlertType('error');
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) fetchProfile();
-  }, [user, showAlert]);
+    fetchProfile();
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.token) return;
     setLoading(true);
-    try {
-      const { code, message } = await axiosInstance.put('/api/auth/profile', formData, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      if (code !== 200) {
-        window.$toast(message, 'info', 2000);
+    setAlertMessage('');
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+    };
+    if (formData.newPassword) {
+      if (!formData.currentPassword) {
+        setAlertMessage('Current password is required to set a new password.');
+        setAlertType('warning');
+        setLoading(false);
         return;
       }
-      window.$toast('Profile updated successfully!');
+      payload.currentPassword = formData.currentPassword;
+      payload.newPassword = formData.newPassword;
+    } else if (formData.currentPassword) {
+      setAlertMessage('New password is required if current password is provided.');
+      setAlertType('warning');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { code, data, message } = await axiosInstance.put('/api/auth/profile', payload);
+
+      if (code !== 200) {
+        setAlertMessage(message || 'Failed to update profile.');
+        setAlertType(code === 401 ? 'warning' : 'error');
+      } else {
+        setAlertMessage(message || 'Profile updated successfully.');
+        setAlertType('success');
+
+        if (data && (data.name !== user.name || data.email !== user.email || data.token)) {
+          dispatch(setUser({ ...user, name: data.name, email: data.email, token: data.token || user.token }));
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+        }));
+      }
     } catch (error) {
-      window.$toast(`Server Error: ${error}`, 'info', 2000);
+      setAlertMessage(`Server Error: ${error.message || error}`);
+      setAlertType('error');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return <div className="text-center mt-20">Loading...</div>;
+  const handleCloseAlert = () => {
+    setAlertMessage('');
+  };
+
+  if (loading && !alertMessage) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div className="max-w-md mx-auto mt-20">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded">
-        <h1 className="text-2xl font-bold mb-4 text-center">Your Profile</h1>
-        <input
-          type="text"
-          placeholder="Name"
+    <Container maxWidth="sm" sx={{ mt: 8 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          p: 4,
+          backgroundColor: 'white',
+          borderRadius: 2,
+          boxShadow: 3,
+          maxWidth: 500,
+          mx: 'auto',
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold' }}>
+          Profile
+        </Typography>
+
+        {alertMessage && (
+          <Alert
+            severity={alertType}
+            sx={{ width: '100%', mb: 3 }}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={handleCloseAlert}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+          >
+            {alertMessage}
+          </Alert>
+        )}
+
+        <TextField
+          label="Name"
+          name="name"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          disabled={!user}
         />
-        <input
+        <TextField
+          label="Email"
+          name="email"
           type="email"
-          placeholder="Email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          disabled={!user}
         />
-        <input
-          type="text"
-          placeholder="University"
-          value={formData.university}
-          onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
+        <TextField
+          label="Current password"
+          name="currentPassword"
+          type="password"
+          placeholder="Enter your current password"
+          value={formData.currentPassword}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          sx={{
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#f59e0b',
+            },
+          }}
+          disabled={!user}
         />
-        <input
-          type="text"
-          placeholder="Address"
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
+        <TextField
+          label="New password"
+          name="newPassword"
+          type="password"
+          placeholder="Enter your new password"
+          value={formData.newPassword}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          disabled={!user}
         />
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
-          {loading ? 'Updating...' : 'Update Profile'}
-        </button>
-      </form>
-    </div>
+
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={loading || !user}
+          sx={{
+            mt: 3,
+            py: 1.5,
+            px: 5,
+            borderRadius: '20px',
+            textTransform: 'none',
+            fontSize: '1rem',
+            backgroundColor: '#3b82f6',
+            '&:hover': {
+              backgroundColor: '#2563eb',
+            },
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+        </Button>
+      </Box>
+    </Container>
   );
 };
 

@@ -1,6 +1,7 @@
 const Survey = require("../models/Survey");
 const Question = require("../models/Question");
 const SurveyResult = require("../models/SurveyResult");
+const { validateAnswer, getErrorMessage } = require("../utils/votingValidation");
 
 /**
  * Get survey details for voting page
@@ -106,12 +107,12 @@ const submitVoting = async (req, res) => {
         continue;
       }
       
-      // Validate multiple choice questions have at least two selections
-      if (question.type === 'multiple' && chooseAnswer.length < 2) {
+      // Use strategy pattern for answer validation
+      if (!validateAnswer(question.type, chooseAnswer)) {
         return res.json({
           code: 400,
           data: null,
-          message: "Multiple choice questions require at least two selections"
+          message: getErrorMessage(question.type)
         });
       }
       

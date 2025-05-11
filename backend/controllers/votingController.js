@@ -4,6 +4,26 @@ const SurveyResult = require("../models/SurveyResult");
 const { validateAnswer, getErrorMessage } = require("../utils/votingValidation");
 
 /**
+ * ResponseHandler - Simple class to encapsulate response formatting
+ */
+class ResponseHandler {
+  /**
+   * Send a formatted response
+   * @param {Object} res - Express response object
+   * @param {number} code - HTTP status code
+   * @param {Object|null} data - Response data
+   * @param {string} message - Response message
+   */
+  static sendResponse(res, code, data, message) {
+    return res.json({
+      code,
+      data,
+      message
+    });
+  }
+}
+
+/**
  * Get survey details for voting page
  * @param {Object} req - Request object containing survey ID
  * @param {Object} res - Response object
@@ -17,20 +37,16 @@ const getSurveyForVoting = async (req, res) => {
     
     // Check if survey exists
     if (!survey) {
-      return res.json({ 
-        code: 404, 
-        data: null, 
-        message: "Survey not found" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 404, null, "Survey not found"
+      );
     }
     
     // Check if survey is active
     if (survey.surveyStatus !== 1) {
-      return res.json({ 
-        code: 400, 
-        data: null, 
-        message: "This survey is currently unavailable" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 400, null, "This survey is currently unavailable"
+      );
     }
     
     // Get all questions related to this survey
@@ -38,20 +54,17 @@ const getSurveyForVoting = async (req, res) => {
       _id: { $in: survey.questions }
     });
     
-    res.json({
-      code: 200,
-      data: {
+    return ResponseHandler.sendResponse(
+      res, 200, {
         survey,
         questions
-      },
-      message: "Survey retrieved successfully"
-    });
+      }, 
+      "Survey retrieved successfully"
+    );
   } catch (error) {
-    res.json({ 
-      code: 500, 
-      data: null, 
-      message: `Server error: ${error.message}` 
-    });
+    return ResponseHandler.sendResponse(
+      res, 500, null, `Server error: ${error.message}`
+    );
   }
 };
 
@@ -66,29 +79,23 @@ const submitVoting = async (req, res) => {
     
     // Validate request data
     if (!id || !answers || !Array.isArray(answers) || answers.length === 0) {
-      return res.json({ 
-        code: 400, 
-        data: null, 
-        message: "Invalid submission data format" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 400, null, "Invalid submission data format"
+      );
     }
     
     // Check if survey exists and is active
     const survey = await Survey.findById(id);
     if (!survey) {
-      return res.json({ 
-        code: 404, 
-        data: null, 
-        message: "Survey not found" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 404, null, "Survey not found"
+      );
     }
     
     if (survey.surveyStatus !== 1) {
-      return res.json({ 
-        code: 400, 
-        data: null, 
-        message: "This survey is currently unavailable" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 400, null, "This survey is currently unavailable"
+      );
     }
     
     // Save answers for each question
@@ -109,11 +116,9 @@ const submitVoting = async (req, res) => {
       
       // Use strategy pattern for answer validation
       if (!validateAnswer(question.type, chooseAnswer)) {
-        return res.json({
-          code: 400,
-          data: null,
-          message: getErrorMessage(question.type)
-        });
+        return ResponseHandler.sendResponse(
+          res, 400, null, getErrorMessage(question.type)
+        );
       }
       
       // Save result with updated schema (both surveyId and questionId)
@@ -132,21 +137,18 @@ const submitVoting = async (req, res) => {
       $inc: { completeCount: 1 }
     });
     
-    res.json({
-      code: 200,
-      data: {
+    return ResponseHandler.sendResponse(
+      res, 200, {
         surveyId: id,
         resultsCount: savedResults.length
       },
-      message: "Survey submitted successfully"
-    });
+      "Survey submitted successfully"
+    );
     
   } catch (error) {
-    res.json({ 
-      code: 500, 
-      data: null, 
-      message: `Server error: ${error.message}` 
-    });
+    return ResponseHandler.sendResponse(
+      res, 500, null, `Server error: ${error.message}`
+    );
   }
 };
 
@@ -164,19 +166,16 @@ const checkVotingStatus = async (req, res) => {
     // Here you could implement more complex logic to check if a user has voted
     // For example, if you have a user authentication system, you could check for user ID and survey ID combinations
     
-    res.json({
-      code: 200,
-      data: {
+    return ResponseHandler.sendResponse(
+      res, 200, {
         surveyId: id
       },
-      message: "Please check local voting status using localStorage"
-    });
+      "Please check local voting status using localStorage"
+    );
   } catch (error) {
-    res.json({ 
-      code: 500, 
-      data: null, 
-      message: `Server error: ${error.message}` 
-    });
+    return ResponseHandler.sendResponse(
+      res, 500, null, `Server error: ${error.message}`
+    );
   }
 };
 
@@ -192,11 +191,9 @@ const getSurveyResults = async (req, res) => {
     // Find survey
     const survey = await Survey.findById(id);
     if (!survey) {
-      return res.json({ 
-        code: 404, 
-        data: null, 
-        message: "Survey not found" 
-      });
+      return ResponseHandler.sendResponse(
+        res, 404, null, "Survey not found"
+      );
     }
     
     // Get all results for this survey, with question details
@@ -225,20 +222,17 @@ const getSurveyResults = async (req, res) => {
       });
     });
     
-    res.json({
-      code: 200,
-      data: {
+    return ResponseHandler.sendResponse(
+      res, 200, {
         survey,
         results: questionResults
       },
-      message: "Survey results retrieved successfully"
-    });
+      "Survey results retrieved successfully"
+    );
   } catch (error) {
-    res.json({ 
-      code: 500, 
-      data: null, 
-      message: `Server error: ${error.message}` 
-    });
+    return ResponseHandler.sendResponse(
+      res, 500, null, `Server error: ${error.message}`
+    );
   }
 };
 

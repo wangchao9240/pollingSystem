@@ -6,7 +6,11 @@ const surveyResultSchema = new mongoose.Schema({
     ref: 'Survey', 
     required: true 
   },
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Survey', required: true },
+  questionId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Question',
+    required: true 
+  },
   chooseAnswer: [{ type: String, required: true }],
   createdAt: { type: Date, default: Date.now },
   modifyAt: { type: Date, default: Date.now },

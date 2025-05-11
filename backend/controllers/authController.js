@@ -98,7 +98,7 @@ const updateUserProfile = async (req, res) => {
           message: "Current password incorrect. Please try again.",
         })
       }
-      user.password = await bcrypt.hash(newPassword, 10)
+      user.password = newPassword // Set the plain new password; the pre('save') hook will hash it
     } else if (currentPassword || newPassword) {
       return res.json({
         code: 400,

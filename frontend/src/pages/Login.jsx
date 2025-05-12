@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Box, Paper, Typography, Button, Input } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser, setLoading } from '../store/authSlice';
 import axiosInstance from '../axiosConfig';
-import { Button, Input } from '@mui/material';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -38,28 +38,66 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded">
-        <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
-        <Input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <Button loading={loading} type="submit" variant='contained' className="w-full bg-blue-600 text-white p-2 rounded">
-          Login
-        </Button>
-      </form>
-    </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        position: 'relative',
+        backgroundImage: 'url(/assets/images/2.png)',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: 4
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{
+          position: 'absolute',
+          top: '40%', left: '57.5%',
+          transform: 'translateY(-50%)',
+          p: 4,
+          maxWidth: 500, minHeight: 380, width: 450,
+          width: '90%',
+          textAlign: 'center',
+          borderRadius: 4,
+          backgroundColor: '#ffffff'
+        }}
+      >
+        <Typography
+          variant="h4"
+          style={{
+            fontFamily: "'Cooper Black', sans-serif",
+            fontWeight: "bold",
+            letterSpacing: "-1px",
+          }}
+        >Welcome Back</Typography>
+
+        <form onSubmit={handleSubmit}>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            fullWidth
+            sx={{ mb: 2, p: 1, backgroundColor: '#ffffff', borderRadius: 2 }}
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            fullWidth
+            sx={{ mb: 3, p: 1, backgroundColor: '#ffffff', borderRadius: 2 }}
+          />
+          <Button type="submit" variant="contained" color="primary" fullWidth sx={{ p: 1.5, fontWeight: 'bold' }} disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </Button>
+        </form>
+        <Typography variant="body2" mt={2}>
+          Don’t have an account? <a href="/register" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 'bold' }}>Register</a>
+        </Typography>
+      </Paper>
+    </Box>
   );
 };
 

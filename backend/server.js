@@ -14,14 +14,14 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/survey', require('./routes/surveyRoutes'));
 app.use('/api/voting', require('./routes/votingRoutes'));
-
+app.use('/api/result', require('./routes/resultRoutes'))
 // Export the app object for testing
 if (require.main === module) {
-    connectDB();
-    // If the file is run directly, start the server
-    const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  }
+  connectDB();
+  // If the file is run directly, start the server
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 
 
 module.exports = app

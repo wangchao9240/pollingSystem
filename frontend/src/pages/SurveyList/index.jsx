@@ -1,308 +1,174 @@
-import {
-  Paper,
-  TablePagination,
-} from "@mui/material";
-import { useEffect, useState, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation and useNavigate
-import DialogModal from "./dialogModal";
-import axiosInstance from "../../axiosConfig";
-import ResultDialog from "./resultDialog";
-import { ActionButton } from "../../components/CustomizeComponent";
-import SearchBar from "./components/SearchBar";
-import ActionMenu from "./components/ActionMenu";
-import DeleteDialog from "./components/DeleteDialog";
-import SurveyTable from "./components/SurveyTable";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Container, Typography, Paper, List, ListItem, Button, Box, Divider, CircularProgress } from "@mui/material";
+import axios from "axios";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
-import "./index.css";
-
-const initialSurvey = {
-  title: "",
-  surveyStatus: 0,
-  questions: [],
-};
-
-const SurveyList = () => {
-  const location = useLocation(); // Get location object
-  const navigate = useNavigate(); // Get navigate function
-  const [surveyList, setSurveyList] = useState([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [surveyItem, setSurveyItem] = useState({});
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openResultDialog, setOpenResultDialog] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedRow, setSelectedRow] = useState(null);
-
-// Use a single state object to manage all query conditions
-  const [searchParams, setSearchParams] = useState({
-    title: '',
-    status: '',
-    date: ''
-  });
-
-// Add form input state separate from search params
-
-  const [formInputs, setFormInputs] = useState({
-    title: '',
-    status: '',
-    date: ''
-  });
-  
- // Use useCallback to optimize function dependencies
-  const querySurveyList = useCallback(async () => {
-    try {
-      // Basic pagination parameters
-      const params = { 
-        page: page + 1, 
-        pageSize: rowsPerPage 
-      };
-      
-      // Use object destructuring and filtering to simplify condition addition
-      const { title, status, date } = searchParams;
-      
-      if (title) params.title = title;
-      if (status !== '') params.status = status;
-      if (date) params.date = date;
-      
-      const { code, data, message } = await axiosInstance.get(
-        "/api/survey/surveyList",
-        { params }
-      );
-      
-      if (code !== 200) {
-        window.$toast(message, "info", 2000);
-        return;
-      }
-      
-      setSurveyList(data.surveyList);
-      setTotal(data.total);
-    } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000);
-    }
-  }, [page, rowsPerPage, searchParams]);
-
-  // Handle search parameter change function
-  const handleSearchChange = useCallback((field, value) => {
-    setFormInputs(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, []);
-
-  // Add function to trigger search with form inputs
-  const handleSearch = useCallback(() => {
-    setSearchParams(formInputs);
-    setPage(0);
-  }, [formInputs]);
-
-  // Reset search conditions
-  const resetSearch = useCallback(() => {
-    const emptyState = {
-      title: '',
-      status: '',
-      date: ''
-    };
-    
-    setFormInputs(emptyState);
-    setSearchParams(emptyState);
-    setPage(0);
-    
-    // No need for setTimeout anymore as we're explicitly triggering the search
-    querySurveyList();
-  }, [querySurveyList]);
-
-  const handleChangePage = useCallback((event, newPage) => {
-    setPage(newPage);
-  }, []);
-
-  const handleChangeRowsPerPage = useCallback((event) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  }, []);
-
-  const handleDeleteSurvey = useCallback(async () => {
-    try {
-      const { code, message } = await axiosInstance.post(
-        "/api/survey/deleteSurvey",
-        { _id: surveyItem._id }
-      );
-      if (code !== 200) {
-        window.$toast(message, "info", 2000);
-        return;
-      }
-      querySurveyList();
-      setOpenDeleteDialog(false);
-      handleMenuClose();
-      window.$toast("Survey deleted successfully", "success", 2000);
-    } catch (error) {
-      window.$toast(`Server Error: ${error}`, "info", 2000);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [querySurveyList, surveyItem]);
-  
-  const handleCopyLink = useCallback((record) => {
-    try {
-      navigator.clipboard.writeText(
-        `${window.location.origin}/voting?id=${record._id}`
-      );
-      window.$toast("Link copied to clipboard", "success", 2000);
-    } catch (error) {
-      const tempInput = document.createElement("input");
-      tempInput.value = `${window.location.origin}/voting?id=${record._id}`;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand("copy");
-      document.body.removeChild(tempInput);
-      window.$toast("Link copied to clipboard", "success", 2000);
-    }
-    handleMenuClose();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleMenuOpen = useCallback((event, row) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedRow(row);
-    setSurveyItem(row);
-  }, []);
-
-  const handleMenuClose = useCallback(() => {
-    setAnchorEl(null);
-  }, []);
-
-  const handleDialogClose = useCallback(() => {
-    setOpenDialog(false);
-    setSurveyItem(initialSurvey);
-  }, []);
-
-  // Function to open the dialog in 'Add survey' mode
-  const handleOpenCreateDialog = useCallback(() => {
-    setSurveyItem(initialSurvey); // Reset survey item for creation
-    setOpenDialog(true);
-  }, []);
-
-  const columns = [
-    { id: "title", label: "Survey Title", minWidth: 170 },
-    { id: "completeCount", label: "Complete Count", minWidth: 100, align: "center" },
-    { 
-      id: "surveyStatus", 
-      label: "Status", 
-      minWidth: 100,
-      align: "center",
-      format: (value) => (value === 1 ? "Active" : "Inactive"),
-    },
-    {
-      id: "modifyAt",
-      label: "modifyAt",
-      minWidth: 170,
-      align: "center",
-      format: (value) => value ? new Date(value).toLocaleString() : '',
-    },
-    {
-      id: "createdAt",
-      label: "createdAt",
-      minWidth: 170,
-      align: "center",
-      format: (value) => value ? new Date(value).toLocaleString() : '',
-    },
-    {
-      id: "actions",
-      label: "Action",
-      minWidth: 120,
-      align: "center",
-      format: (value, record) => (
-        <ActionButton
-          onClick={(e) => handleMenuOpen(e, record)}
-          variant="outlined"
-          size="small"
-        >
-          Action
-        </ActionButton>
-      ),
-    },
+export const Result = () => {
+  const [survey, setSurvey] = useState(null);
+  const [loading, setLoading] = useState(true); // Loading state for survey
+  const [chartData, setChartData] = useState({});
+  const [error, setError] = useState(null);
+  const { id } = useParams();
+  const COLORS = [
+    "#0088FE", "#00C49F", "#FFBB28", "#FF8042",
+    "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0",
+    "#9966FF", "#FF9F40", "#FFCD56", "#C9CBCF"
   ];
 
   useEffect(() => {
-    querySurveyList();
-  }, [querySurveyList]);
+    const fetchSurvey = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:5001/api/result/surveys/${id}`);
+        setSurvey(response.data.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching survey data.", error);
+        setError("Failed to load survey data.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Effect to check location state and open dialog if needed
-  useEffect(() => {
-    if (location.state?.openCreateDialog) {
-      handleOpenCreateDialog();
-      // Clear the state to prevent re-opening on refresh or back navigation
-      navigate(location.pathname, { replace: true, state: {} });
+    if (id) fetchSurvey();
+  }, [id]);
+
+  const handleOptionClick = async (questionId) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:5001/api/result/surveys/${id}/question/${questionId}/results`
+      );
+      const results = response.data.data;
+
+      const optionCount = {};
+      results.forEach((result) => {
+        result.chooseAnswer.forEach((answer) => {
+          optionCount[answer] = (optionCount[answer] || 0) + 1;
+        });
+      });
+
+      const formattedData = Object.entries(optionCount).map(([option, count]) => ({
+        name: option,
+        value: count,
+      }));
+
+      setChartData((prev) => ({
+        ...prev,
+        [questionId]: formattedData,
+      }));
+    } catch (error) {
+      console.error("Error fetching result data.", error);
+    } finally {
+      setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state, handleOpenCreateDialog, navigate]); // Add dependencies
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4, textAlign: "center" }}>
+        <CircularProgress size={40} sx={{ mb: 2 }} />
+        <Typography>Loading survey data...</Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4, textAlign: "center" }}>
+        <Typography color="error">{error}</Typography>
+      </Container>
+    );
+  }
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
-      <SearchBar 
-        searchParams={formInputs} // Pass form inputs instead of searchParams
-        handleSearchChange={handleSearchChange}
-        querySurveyList={handleSearch} // Use handleSearch instead of direct querySurveyList
-        resetSearch={resetSearch}
-        openAddDialog={handleOpenCreateDialog} // Use the new handler here
-      />
-      
-      <SurveyTable 
-        columns={columns}
-        surveyList={surveyList}
-      />
-      
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 100]}
-        component="div"
-        count={total}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-        labelRowsPerPage="Rows per page:"
-      />
-      
-      <ActionMenu 
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        onEdit={() => {
-          setOpenDialog(true);
-          handleMenuClose();
-        }}
-        onCopyLink={() => handleCopyLink(selectedRow)}
-        onViewResult={() => {
-          setOpenResultDialog(true);
-          handleMenuClose();
-        }}
-        onDelete={() => {
-          setOpenDeleteDialog(true);
-          handleMenuClose();
-        }}
-      />
-      
-      <DialogModal
-        querySurveyList={querySurveyList}
-        open={openDialog}
-        handleClose={handleDialogClose}
-        survey={surveyItem}
-      />
-      
-      <DeleteDialog
-        open={openDeleteDialog}
-        handleClose={() => setOpenDeleteDialog(false)}
-        handleDelete={handleDeleteSurvey}
-      />
-      
-      <ResultDialog
-        open={openResultDialog}
-        handleClose={() => setOpenResultDialog(false)}
-        survey={surveyItem}
-      />
-    </Paper>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ padding: 4, borderRadius: 4, backgroundColor: "#f5f5f5" }}>
+        <Typography variant="h4" sx={{ fontWeight: "bold", mb: 3, textAlign: "center" }}>
+          {survey.title}
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
+
+        {survey.questions.map((question) => (
+          <Box key={question._id} sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: "medium", mb: 1 }}>
+              {question.question}
+            </Typography>
+            <List>
+              {question.options.map((option) => (
+                <ListItem key={option._id} sx={{ p: 0, mb: 1 }}>
+                  <Box
+                    sx={{
+                      padding: "10px",
+                      border: "1px solid",
+                      borderColor: "gray.400",
+                      borderRadius: "4px",
+                      textAlign: "center",
+                      backgroundColor: "#f0f0f0",
+                      width: "100%",
+                    }}
+                  >
+                    {option.optionKey} : {option.optionValue}
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={() => handleOptionClick(question._id)}
+              sx={{ mt: 2 }}
+            >
+              View Result
+            </Button>
+
+            {chartData[question._id] ? (
+              chartData[question._id].length > 0 ? (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 4 }}>
+                  {/* Pie Chart */}
+                  <ResponsiveContainer width="45%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={chartData[question._id]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        label
+                      >
+                        {chartData[question._id].map((entry, idx) => (
+                          <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  <ResponsiveContainer width="45%" height={300}>
+                    <BarChart data={chartData[question._id]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              ) : (
+                <Typography sx={{ mt: 2, textAlign: "center" }}>No responses yet.</Typography>
+              )
+            ) : (
+              <Typography sx={{ mt: 2, textAlign: "center" }}>Click "View Result" to generate charts.</Typography>
+            )}
+          </Box>
+        ))}
+      </Paper>
+    </Container>
   );
 };
 
-export default SurveyList;
+export default Result;

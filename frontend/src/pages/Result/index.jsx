@@ -123,42 +123,45 @@ export const Result = () => {
                             View Result
                         </Button>
 
-                        {/* Display Charts if Data Exists */}
                         {chartData[question._id] ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 4 }}>
-                                {/* Pie Chart */}
-                                <ResponsiveContainer width="45%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={chartData[question._id]}
-                                            dataKey="value"
-                                            nameKey="name"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={100}
-                                            fill="#8884d8"
-                                            label
-                                        >
-                                            {chartData[question._id].map((entry, idx) => (
-                                                <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                            chartData[question._id].length > 0 ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 4 }}>
+                                    {/* Pie Chart */}
+                                    <ResponsiveContainer width="45%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={chartData[question._id]}
+                                                dataKey="value"
+                                                nameKey="name"
+                                                cx="50%"
+                                                cy="50%"
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                label
+                                            >
+                                                {chartData[question._id].map((entry, idx) => (
+                                                    <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
 
-                                {/* Bar Chart */}
-                                <ResponsiveContainer width="45%" height={300}>
-                                    <BarChart data={chartData[question._id]}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Legend />
-                                        <Bar dataKey="value" fill="#8884d8" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </Box>
+                                    {/* Bar Chart */}
+                                    <ResponsiveContainer width="45%" height={300}>
+                                        <BarChart data={chartData[question._id]}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Bar dataKey="value" fill="#8884d8" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                            ) : (
+                                <Typography sx={{ mt: 2, textAlign: "center" }}>No responses yet.</Typography>
+                            )
                         ) : (
                             <Typography sx={{ mt: 2, textAlign: "center" }}>Click "View Result" to generate charts.</Typography>
                         )}

@@ -14,7 +14,7 @@ import Layout from "../layout/layout"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-
+import Result from "../pages/Result/index"
 const AppRouter = () => {
   return (
     <Router>
@@ -31,6 +31,7 @@ const AppRouter = () => {
           <Route path="/surveySuccess" element={<Success />} />
           <Route path="/voting-complete" element={<VotingComplete />} />
           <Route path="/voting" element={<Voting />} />
+          <Route path="result/:id" element={<Result />} />
         </Routes>
       </Layout>
     </Router>

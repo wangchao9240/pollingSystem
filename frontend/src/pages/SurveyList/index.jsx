@@ -35,47 +35,47 @@ const SurveyList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
-// Use a single state object to manage all query conditions
+  // Use a single state object to manage all query conditions
   const [searchParams, setSearchParams] = useState({
     title: '',
     status: '',
     date: ''
   });
 
-// Add form input state separate from search params
+  // Add form input state separate from search params
 
   const [formInputs, setFormInputs] = useState({
     title: '',
     status: '',
     date: ''
   });
-  
- // Use useCallback to optimize function dependencies
+
+  // Use useCallback to optimize function dependencies
   const querySurveyList = useCallback(async () => {
     try {
       // Basic pagination parameters
-      const params = { 
-        page: page + 1, 
-        pageSize: rowsPerPage 
+      const params = {
+        page: page + 1,
+        pageSize: rowsPerPage
       };
-      
+
       // Use object destructuring and filtering to simplify condition addition
       const { title, status, date } = searchParams;
-      
+
       if (title) params.title = title;
       if (status !== '') params.status = status;
       if (date) params.date = date;
-      
+
       const { code, data, message } = await axiosInstance.get(
         "/api/survey/surveyList",
         { params }
       );
-      
+
       if (code !== 200) {
         window.$toast(message, "info", 2000);
         return;
       }
-      
+
       setSurveyList(data.surveyList);
       setTotal(data.total);
     } catch (error) {
@@ -104,11 +104,11 @@ const SurveyList = () => {
       status: '',
       date: ''
     };
-    
+
     setFormInputs(emptyState);
     setSearchParams(emptyState);
     setPage(0);
-    
+
     // No need for setTimeout anymore as we're explicitly triggering the search
     querySurveyList();
   }, [querySurveyList]);
@@ -139,9 +139,9 @@ const SurveyList = () => {
     } catch (error) {
       window.$toast(`Server Error: ${error}`, "info", 2000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [querySurveyList, surveyItem]);
-  
+
   const handleCopyLink = useCallback((record) => {
     try {
       navigator.clipboard.writeText(
@@ -158,7 +158,7 @@ const SurveyList = () => {
       window.$toast("Link copied to clipboard", "success", 2000);
     }
     handleMenuClose();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMenuOpen = useCallback((event, row) => {
@@ -185,9 +185,9 @@ const SurveyList = () => {
   const columns = [
     { id: "title", label: "Survey Title", minWidth: 170 },
     { id: "completeCount", label: "Complete Count", minWidth: 100, align: "center" },
-    { 
-      id: "surveyStatus", 
-      label: "Status", 
+    {
+      id: "surveyStatus",
+      label: "Status",
       minWidth: 100,
       align: "center",
       format: (value) => (value === 1 ? "Active" : "Inactive"),
@@ -234,24 +234,24 @@ const SurveyList = () => {
       // Clear the state to prevent re-opening on refresh or back navigation
       navigate(location.pathname, { replace: true, state: {} });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, handleOpenCreateDialog, navigate]); // Add dependencies
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", padding: 2 }}>
-      <SearchBar 
+      <SearchBar
         searchParams={formInputs} // Pass form inputs instead of searchParams
         handleSearchChange={handleSearchChange}
         querySurveyList={handleSearch} // Use handleSearch instead of direct querySurveyList
         resetSearch={resetSearch}
         openAddDialog={handleOpenCreateDialog} // Use the new handler here
       />
-      
-      <SurveyTable 
+
+      <SurveyTable
         columns={columns}
         surveyList={surveyList}
       />
-      
+
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
@@ -263,8 +263,8 @@ const SurveyList = () => {
         labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
         labelRowsPerPage="Rows per page:"
       />
-      
-      <ActionMenu 
+
+      <ActionMenu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
@@ -274,28 +274,27 @@ const SurveyList = () => {
         }}
         onCopyLink={() => handleCopyLink(selectedRow)}
         onViewResult={() => {
-          setOpenResultDialog(true);
-          handleMenuClose();
+          navigate(`/result/${surveyItem._id}`);
         }}
         onDelete={() => {
           setOpenDeleteDialog(true);
           handleMenuClose();
         }}
       />
-      
+
       <DialogModal
         querySurveyList={querySurveyList}
         open={openDialog}
         handleClose={handleDialogClose}
         survey={surveyItem}
       />
-      
+
       <DeleteDialog
         open={openDeleteDialog}
         handleClose={() => setOpenDeleteDialog(false)}
         handleDelete={handleDeleteSurvey}
       />
-      
+
       <ResultDialog
         open={openResultDialog}
         handleClose={() => setOpenResultDialog(false)}

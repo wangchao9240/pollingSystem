@@ -30,6 +30,7 @@ const Register = () => {
   return (
     <Box
       sx={{
+        margin: '-20px',
         minHeight: '100vh',
         position: 'relative',
         backgroundImage: 'url(/assets/images/2.png)',

@@ -149,13 +149,16 @@ const SurveyList = () => {
       );
       window.$toast("Link copied to clipboard", "success", 2000);
     } catch (error) {
-      const tempInput = document.createElement("input");
-      tempInput.value = `${window.location.origin}/voting?id=${record._id}`;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand("copy");
-      document.body.removeChild(tempInput);
-      window.$toast("Link copied to clipboard", "success", 2000);
+      // const tempInput = document.createElement("input");
+      // tempInput.value = `${window.location.origin}/voting?id=${record._id}`;
+      // document.body.appendChild(tempInput);
+      // tempInput.select();
+      // document.execCommand("copy");
+      // document.body.removeChild(tempInput);
+      window.$toast("current environment not supported, jump to the link automatically", "info", 2000);
+      setTimeout(() => {
+        window.open(`${window.location.origin}/voting?id=${record._id}`);
+      }, 2000);
     }
     handleMenuClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps

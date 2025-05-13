@@ -1,41 +1,29 @@
-import Navbar from "../components/Navbar"
-
-import "./layout.css"
 import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
+import { useLocation } from "react-router-dom" // Add useLocation
+import Navbar from "../components/Navbar"
+import "./layout.css"
 
 const Layout = ({ children }) => {
-  const { user } = useSelector((state) => state.auth)
+  const location = useLocation() // Use React Router's useLocation hook
   const [clientSide, setClientSide] = useState(false)
-  const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
+  // Effect to run whenever the route changes
   useEffect(() => {
-    const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname)
-    }
-
-    // Listen for browser back/forward navigation
-    window.addEventListener("popstate", handleLocationChange)
-
-    return () => {
-      window.removeEventListener("popstate", handleLocationChange)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Check if the path is exactly "/survey" OR exactly "/surveySuccess"
+    console.log("location changed!!!", location.pathname)
+    
+    // Check if the path is a client-side only route
     if (
-      currentPath === "/login" ||
-      currentPath === "/register" ||
-      currentPath === "/survey" ||
-      currentPath === "/surveySuccess" ||
-      currentPath === "/voting"
+      location.pathname === "/login" ||
+      location.pathname === "/register" ||
+      location.pathname === "/survey" ||
+      location.pathname === "/surveySuccess" ||
+      location.pathname === "/voting"
     ) {
       setClientSide(true)
     } else {
       setClientSide(false)
     }
-  }, [currentPath])
+  }, [location.pathname]) // Only re-run when pathname changes
 
   return (
     <div>

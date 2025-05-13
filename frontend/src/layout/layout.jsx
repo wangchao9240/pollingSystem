@@ -16,15 +16,21 @@ const Layout = ({ children }) => {
 
     // Listen for browser back/forward navigation
     window.addEventListener("popstate", handleLocationChange)
-    
+
     return () => {
       window.removeEventListener("popstate", handleLocationChange)
-          }
+    }
   }, [])
 
   useEffect(() => {
     // Check if the path is exactly "/survey" OR exactly "/surveySuccess"
-    if (currentPath === "/survey" || currentPath === '/surveySuccess' || currentPath === '/voting') { 
+    if (
+      currentPath === "/login" ||
+      currentPath === "/register" ||
+      currentPath === "/survey" ||
+      currentPath === "/surveySuccess" ||
+      currentPath === "/voting"
+    ) {
       setClientSide(true)
     } else {
       setClientSide(false)
@@ -34,9 +40,7 @@ const Layout = ({ children }) => {
   return (
     <div>
       {!clientSide && <Navbar />}
-      <div style={{ padding: '20px' }}>
-        {children}
-      </div>
+      <div style={{ padding: "20px" }}>{children}</div>
     </div>
   )
 }

@@ -17,7 +17,8 @@ const Layout = ({ children }) => {
       location.pathname === "/register" ||
       location.pathname === "/survey" ||
       location.pathname === "/surveySuccess" ||
-      location.pathname === "/voting"
+      location.pathname === "/voting" ||
+      location.pathname === "/voting-complete"
     ) {
       setClientSide(true)
     } else {

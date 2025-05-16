@@ -85,9 +85,13 @@ export const Result = () => {
     return (
         <Container maxWidth="md" sx={{ mt: 4 }}>
             <Paper elevation={3} sx={{ padding: 4, borderRadius: 4, backgroundColor: "#f5f5f5" }}>
-                <Typography variant="h4" sx={{ fontWeight: "bold", mb: 3, textAlign: "center" }}>
-                    {survey.title}
-                </Typography>
+                {
+                    survey && (
+                        <Typography variant="h4" sx={{ fontWeight: "bold", mb: 3, textAlign: "center" }}>
+                            {survey.title}
+                        </Typography>
+                    )
+                }
                 <Divider sx={{ mb: 3 }} />
 
                 {survey.questions.map((question) => (

@@ -19,7 +19,7 @@ const Navbar = () => {
 
       <div className="flex items-center space-x-4">
         <Link to="/" className={"text-2xl font-bold"}>
-          Online Polling System
+          Feedback Matters
         </Link>
         {user && (
           <span className="ml-25 font-semibold italic text-lg mt-0.5">

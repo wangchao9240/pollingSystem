@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Container, Typography, Paper, List, ListItem, Button, Box, Divider, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import axiosInstance from "../../axiosConfig";
 
 export const Result = () => {
     const [survey, setSurvey] = useState(null);
@@ -20,8 +21,9 @@ export const Result = () => {
         const fetchSurvey = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`http://localhost:5001/api/result/surveys/${id}`);
-                setSurvey(response.data.data);
+                const response = await axiosInstance.get(`/api/result/surveys/${id}`);
+                console.log("Survey data:", response.data);
+                setSurvey(response.data);
                 setError(null);
             } catch (error) {
                 console.error("Error fetching survey data.", error);
@@ -37,10 +39,10 @@ export const Result = () => {
     const handleOptionClick = async (questionId) => {
         setLoading(true);
         try {
-            const response = await axios.get(
-                `http://localhost:5001/api/result/surveys/${id}/question/${questionId}/results`
+            const response = await axiosInstance.get(
+                `/api/result/surveys/${id}/question/${questionId}/results`
             );
-            const results = response.data.data;
+            const results = response.data;
 
             const optionCount = {};
             results.forEach((result) => {
